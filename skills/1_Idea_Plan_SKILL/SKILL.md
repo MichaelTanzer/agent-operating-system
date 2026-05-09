@@ -1,4 +1,4 @@
-\---
+---
 
 name: flywheel-ideation-planning
 version: 2.0.0
