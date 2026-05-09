@@ -1,0 +1,27 @@
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Secrets — never committed
+.env
+.env.*
+!.env.example
+
+# Logs and scratch
+*.log
+scratch/
+tmp/
+
+# Python (in case any skill helpers use it)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (in case any skill helpers use it)
+node_modules/
