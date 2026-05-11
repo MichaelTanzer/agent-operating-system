@@ -37,7 +37,7 @@ gbrain list -n 50
 ```bash
 cd "$HOME/dev/repos/brain"
 git rm path/to/file.md
- git commit -m "chore: remove out-of-policy brain page"
+git commit -m "chore: remove out-of-policy brain page"
 ```
 
 3. Soft-delete the page from Gbrain:
