@@ -1,0 +1,11 @@
+title = "agent-operating-system gitleaks config"
+
+[allowlist]
+description = "Allow documented placeholder/example tokens only. Real secrets must never match these patterns."
+regexes = [
+  '''EXAMPLE[_-]?(TOKEN|KEY|SECRET|PASSWORD)[_A-Z0-9-]*''',
+  '''PLACEHOLDER[_-]?(TOKEN|KEY|SECRET|PASSWORD)[_A-Z0-9-]*''',
+  '''sk-or-v1-EXAMPLE_TOKEN_HERE''',
+  '''ghp_EXAMPLE_TOKEN_HERE''',
+  '''gho_EXAMPLE_TOKEN_HERE'''
+]

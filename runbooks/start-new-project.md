@@ -47,7 +47,44 @@ The 10 files it creates:
   BUGS.md           — known deferred issues (grows over time)
   CHANGELOG.md      — release history (grows over time)
 
-### 4. Fill in the memory files (in priority order)
+### 4. Bootstrap CI and PR review gates
+
+Copy the reusable GitHub Actions templates into the new project's active
+workflow directory, dropping the `.tmpl` suffix:
+
+```bash
+cd ~/dev/repos/<project-name>
+mkdir -p .github/workflows .github
+cp ~/dev/repos/agent-operating-system/templates/.github/workflows/ci.yml.tmpl \
+  .github/workflows/ci.yml
+cp ~/dev/repos/agent-operating-system/templates/.github/workflows/markdown-lint.yml.tmpl \
+  .github/workflows/markdown-lint.yml
+cp ~/dev/repos/agent-operating-system/templates/.github/workflows/secret-scan.yml.tmpl \
+  .github/workflows/secret-scan.yml
+cp ~/dev/repos/agent-operating-system/templates/PULL_REQUEST_TEMPLATE.md \
+  .github/PULL_REQUEST_TEMPLATE.md
+```
+
+Then add a project-specific `Makefile` with at least:
+
+```make
+.PHONY: lint ci
+
+lint:
+	# project-specific lint command
+
+ci: lint
+	# project-specific tests/build command
+```
+
+The generic `ci.yml` workflow intentionally calls `make ci`, so each project can
+choose its own language-specific validation without changing the workflow.
+
+For review, use `~/dev/repos/agent-operating-system/policies/CODEX_REVIEW_PROMPT.md`
+as the standard Codex reviewer prompt when a Claude-generated branch is ready for
+independent review.
+
+### 5. Fill in the memory files (in priority order)
 
 Fill these in before running any agent on the project:
 
@@ -66,7 +103,7 @@ before the first line of code.
 DECISIONS.md, BUGS.md, and CHANGELOG.md start essentially empty and fill in
 over time.
 
-### 5. Set branch protection on main
+### 6. Set branch protection on main
 
 GitHub Settings > Branches > Add rule:
 - Branch name: main
@@ -74,16 +111,18 @@ GitHub Settings > Branches > Add rule:
 - Require status checks to pass: yes (add your CI check name)
 - Do not allow force pushes: yes
 
-### 6. Push and verify CI
+### 7. Push and verify CI
 
 ```bash
 cd ~/dev/repos/<project-name>
 git push origin main
 ```
 
-Create a test PR to confirm CI runs.
+Create a test PR to confirm CI runs. A good smoke test is a throwaway branch with
+one deliberately malformed Markdown file. Confirm markdown-lint fails for the
+expected reason, then close the PR without merging.
 
-### 7. Enable the flywheel
+### 8. Enable the flywheel
 
 If using the Flywheel workflow:
 - Run `/flywheel-ideate` (skill 1) to produce PLAN_FINAL.md
@@ -102,6 +141,11 @@ If using the simpler worktree stack:
 - [ ] AGENTS.md project-specific section filled in
 - [ ] TESTING.md has a working test command
 - [ ] .gitignore includes .env
+- [ ] `.github/workflows/ci.yml` calls `make ci`
+- [ ] `.github/workflows/markdown-lint.yml` runs markdownlint on PRs
+- [ ] `.github/workflows/secret-scan.yml` runs gitleaks on PRs
+- [ ] `.github/PULL_REQUEST_TEMPLATE.md` exists
+- [ ] Makefile has `lint` and `ci` targets
 - [ ] Branch protection enabled on main
 - [ ] CI workflow runs on a test PR
 - [ ] CURRENT_STATE.md has a meaningful "Next recommended action"
@@ -110,5 +154,8 @@ If using the simpler worktree stack:
 
 - project-init says "not a git repo": clone the repo first, then run project-init
 - CI fails immediately: the ci.yml skeleton needs the test command filled in
+- `make ci` fails in GitHub Actions: ensure your Makefile installs any language tooling first or uses checked-in lockfiles
+- markdown-lint flags long prose: tune `.markdownlint.json`; do not disable all rules blindly
+- gitleaks flags example tokens: add narrowly-scoped dummy patterns to `.gitleaks.toml`
 - Agent ignores memory files: confirm AGENTS.md is in the repo ROOT (not a subdir)
 - CURRENT_STATE.md gets stale: enforce the end-of-session ritual in AGENTS.md
