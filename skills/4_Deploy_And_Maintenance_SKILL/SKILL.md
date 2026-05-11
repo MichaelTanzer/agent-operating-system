@@ -82,6 +82,24 @@ Common failure modes this protocol is calibrated to address:
 
 The leverage in this phase is *not* in the prompts. It is in (a) gating the initial deploy with real preflight + smoke tests + rollback rehearsal, (b) running the autopilot rhythm consistently rather than skipping days, and (c) keeping the operator presence light enough that it actually happens daily.
 
+## CURRENT_STATE.md — required update at end of every session
+
+Before any session using this skill ends, CURRENT_STATE.md MUST be updated:
+
+1. Set "Updated:" to today's date
+2. Move completed deploy/maintenance work into "Recently completed"
+3. Update "Working" to reflect what is now confirmed live in production
+4. Update "Broken" and "Risks" with anything surfaced during the run
+5. Set "Next recommended action" to the next autopilot action or known follow-up
+
+For Track A: update after every successful deploy and after rollback rehearsal.
+For Track B: update at end of every daily autopilot run.
+
+This is non-negotiable. The next session (human or agent) reads CURRENT_STATE.md
+first. If it is stale, the next session starts blind.
+
+---
+
 ## When to use this skill
 
 Use this skill when:
