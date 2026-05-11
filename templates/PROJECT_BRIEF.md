@@ -8,7 +8,7 @@ Updated: <!-- YYYY-MM-DD -->
      Write it so an agent that has never heard of this project understands its
      purpose and direction in 30 seconds.
      Example:
-     "TanzerBot is a multi-agent investment research system that produces
+     "ExampleApp is a multi-agent research system that produces
      publication-quality analytical essays on public equities. It chains a
      planning agent, four synthesis agents, and an evaluation harness to turn
      a stock ticker into a structured research report in under 10 minutes." -->

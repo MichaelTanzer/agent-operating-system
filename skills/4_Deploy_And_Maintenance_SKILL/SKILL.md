@@ -465,7 +465,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable <service-name>.service
 ```
 
-For scheduled job pipelines (TanzerBot-style research jobs):
+For scheduled job pipelines (research-job-style scheduled pipelines):
 
 ```bash
 # Install the cron / systemd timer / k8s CronJob etc.
