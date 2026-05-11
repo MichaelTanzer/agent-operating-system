@@ -1,0 +1,28 @@
+name: Markdown lint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '.markdownlint.json'
+      - '.markdownlint-cli2.jsonc'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-lint:
+    name: markdownlint-cli2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint-cli2
+        uses: DavidAnson/markdownlint-cli2-action@v17
+        with:
+          globs: '**/*.md'
