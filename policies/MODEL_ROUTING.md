@@ -33,9 +33,26 @@ Use for:
 - Research-style comparison
 - Cheap first-pass analysis
 
+## Gbrain / memory tasks
+
+Use Gbrain for:
+- Project-memory lookup after Phase 12 installation
+- Retrospective retrieval
+- PR and task summary search
+- Decision-history lookup
+
+Before any agent writes to Gbrain or imports a new source, it must read:
+- `policies/GBRAIN_POLICY.md`
+- `runbooks/backup-restore-gbrain.md`
+- `runbooks/delete-gbrain-memory.md`
+
+Do not use Gbrain personal-data integrations unless `GBRAIN_POLICY.md` is revised
+and the user explicitly approves the new source.
+
 ## Routing rules
 
 - Never use the same agent as both implementer and reviewer on the same PR.
 - Default reviewer for Claude Code branches: Codex.
 - Default summarizer for large PRs: Gemini.
 - Escalate to a second model if the first produces low-confidence output on a safety-relevant task.
+- Gbrain writes are memory operations; treat scope expansion as a policy change, not a convenience.

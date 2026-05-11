@@ -103,7 +103,33 @@ before the first line of code.
 DECISIONS.md, BUGS.md, and CHANGELOG.md start essentially empty and fill in
 over time.
 
-### 6. Set branch protection on main
+### 6. Register safe project memory in Gbrain, if enabled
+
+If Gbrain is installed and the project is allowed by `policies/GBRAIN_POLICY.md`,
+add only the approved project-memory artifacts to `~/dev/repos/brain/`:
+
+```bash
+mkdir -p ~/dev/repos/brain/projects/<project-name>
+cp PLAN_FINAL.md CURRENT_STATE.md DECISIONS.md \
+  ~/dev/repos/brain/projects/<project-name>/ 2>/dev/null || true
+```
+
+Do not ingest code, emails, calendars, chat exports, browser history, financial
+records, or personal documents. Before importing a new source, read:
+
+- `policies/GBRAIN_POLICY.md`
+- `runbooks/backup-restore-gbrain.md`
+- `runbooks/delete-gbrain-memory.md`
+
+After adding files, run a local import without embeddings unless an embedding
+provider is already approved:
+
+```bash
+gbrain import ~/dev/repos/brain --no-embed
+gbrain search "<project-name>"
+```
+
+### 7. Set branch protection on main
 
 GitHub Settings > Branches > Add rule:
 - Branch name: main
@@ -111,7 +137,7 @@ GitHub Settings > Branches > Add rule:
 - Require status checks to pass: yes (add your CI check name)
 - Do not allow force pushes: yes
 
-### 7. Push and verify CI
+### 8. Push and verify CI
 
 ```bash
 cd ~/dev/repos/<project-name>
@@ -122,7 +148,7 @@ Create a test PR to confirm CI runs. A good smoke test is a throwaway branch wit
 one deliberately malformed Markdown file. Confirm markdown-lint fails for the
 expected reason, then close the PR without merging.
 
-### 8. Enable the flywheel
+### 9. Enable the flywheel
 
 If using the Flywheel workflow:
 - Run `/flywheel-ideate` (skill 1) to produce PLAN_FINAL.md
@@ -149,6 +175,8 @@ If using the simpler worktree stack:
 - [ ] Branch protection enabled on main
 - [ ] CI workflow runs on a test PR
 - [ ] CURRENT_STATE.md has a meaningful "Next recommended action"
+- [ ] If Gbrain is enabled: only approved project-memory artifacts were imported
+- [ ] If Gbrain is enabled: `gbrain search "<project-name>"` returns expected project memory
 
 ## Common failures
 
