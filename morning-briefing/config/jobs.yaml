@@ -202,13 +202,20 @@ jobs:
       format: single_item
       max_sentences: 2
       label: "One Thing to Not Do Today"
+      tone: diagnostic_non_scolding
       mutations_allowed: false
       gbrain_writes: false
     gbrain_integration:
-      enabled: false              # Phase 1 is deterministic and side-effect free
-      read_anti_patterns: false
-      read_kanban_last_days: 0
+      enabled: true               # read-only enrichment; delivery remains side-effect free
+      read_anti_patterns: true
+      read_diagnostic_observations: true
+      read_kanban_last_days: 7
       write_on_delivery: false
+      write_threshold: "2 source classes or 3 matching signals across 2 dates; max 1 guardrail/week"
+    feedback_sources:
+      - gbrain_guardrails
+      - kanban_recent_runs
+      - session_derived_feedback
     dry_run_cmd: "python3 morning-briefing/scripts/no_do.py --dry-run"
 
   gratitude:
