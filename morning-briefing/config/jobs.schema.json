@@ -36,7 +36,20 @@
         "template": {"type": "string", "description": "Path to Jinja2 template"},
         "dry_run_cmd": {"type": "string"},
         "gbrain_integration": {"$ref": "#/definitions/gbrain_integration"},
+        "response_capture": {"$ref": "#/definitions/response_capture"},
         "output_contract": {"type": "object"}
+      }
+    },
+    "response_capture": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "consent_required": {"type": "boolean"},
+        "policy_decision": {"type": "string", "enum": ["not_approved", "approved"]},
+        "policy_path": {"type": "string"},
+        "gbrain_collection": {"type": "string"},
+        "gbrain_page": {"type": "string"},
+        "note": {"type": "string"}
       }
     },
     "gbrain_integration": {

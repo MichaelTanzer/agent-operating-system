@@ -216,8 +216,15 @@ no_do                  | guardrails/anti-patterns               | (none on daily
                        | guardrails/diagnostic-observations     | guardrails/anti-patterns (rare explicit consolidation/write mode)
                        | Kanban recent runs (last 7 days)       | guardrails/diagnostic-observations (rare explicit consolidation/write mode)
                        | session-derived feedback signals       |
-gratitude              | (none)                                 | (none)
+gratitude              | (none)                                 | (none — reply capture disabled by policy)
 ```
+
+Gratitude reply decision: as of 2026-05-13, gratitude replies are private
+personal reflections and are not approved for Gbrain storage. The reserved target
+for a future explicitly approved capture path is `personal/gratitude/replies.md`
+under the `personal/gratitude` collection, but automated writes must remain
+disabled until `policies/GBRAIN_POLICY.md` is revised, MT grants consent for the
+specific reply, and deletion/backup smoke tests cover that source.
 
 Note on `gbrain_recall`: this job searches broadly across all Gbrain content
 but never writes. It tracks which notes have been recalled recently via a
