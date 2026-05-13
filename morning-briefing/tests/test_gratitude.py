@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -54,6 +55,10 @@ class GratitudeScriptTest(unittest.TestCase):
         self.assertEqual(payload["message"]["expected_response_points"], 3)
         self.assertIn("MT, what are three things", payload["message"]["text"])
         self.assertIn("config", payload)
+        self.assertIn("response_capture", payload)
+        self.assertFalse(payload["response_capture"]["enabled"])
+        self.assertFalse(payload["response_capture"]["gbrain_writes"])
+        self.assertEqual(payload["response_capture"]["policy_decision"], "not_approved")
 
     def test_dry_run_prints_separate_interactive_message(self) -> None:
         exit_code, stdout, _stderr = self.run_main("--dry-run")
@@ -76,6 +81,80 @@ class GratitudeScriptTest(unittest.TestCase):
         contract_text = jobs_config["jobs"]["gratitude"]["output_contract"]["text"]
 
         self.assertEqual(contract_text, self.gratitude.PROMPT_TEXT)
+
+    def test_jobs_yaml_disables_response_capture_without_policy_approval(self) -> None:
+        jobs_config = yaml.safe_load(JOBS_YAML_PATH.read_text(encoding="utf-8"))
+        capture = jobs_config["jobs"]["gratitude"]["response_capture"]
+
+        self.assertFalse(capture["enabled"])
+        self.assertTrue(capture["consent_required"])
+        self.assertEqual(capture["policy_decision"], "not_approved")
+        self.assertEqual(capture["policy_path"], "policies/GBRAIN_POLICY.md")
+        self.assertEqual(capture["gbrain_collection"], "personal/gratitude")
+        self.assertEqual(capture["gbrain_page"], "personal/gratitude/replies.md")
+
+    def test_capture_reply_cli_skips_and_does_not_echo_private_text(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            exit_code, stdout, stderr = self.run_main(
+                "--capture-reply",
+                "private gratitude answer",
+                "--consent-granted",
+                "--gbrain-root",
+                tmpdir,
+            )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stderr, "")
+            self.assertNotIn("private gratitude answer", stdout)
+            result = json.loads(stdout)
+            self.assertEqual(result["status"], "skipped")
+            self.assertEqual(result["reason"], "capture_disabled")
+            self.assertFalse(result["gbrain_writes"])
+            self.assertFalse((Path(tmpdir) / "personal").exists())
+
+    def test_capture_reply_requires_consent_even_when_policy_is_approved(self) -> None:
+        policy = self.gratitude.ResponseCapturePolicy(
+            enabled=True,
+            consent_required=True,
+            policy_decision="approved",
+            policy_path="policies/GBRAIN_POLICY.md",
+            gbrain_collection="personal/gratitude",
+            gbrain_page="personal/gratitude/replies.md",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self.gratitude.capture_gratitude_reply(
+                reply_text="private gratitude answer",
+                consent_granted=False,
+                policy=policy,
+                gbrain_root=tmpdir,
+            )
+
+            self.assertEqual(result["status"], "skipped")
+            self.assertEqual(result["reason"], "consent_not_granted")
+            self.assertFalse((Path(tmpdir) / "personal").exists())
+
+    def test_capture_reply_writes_only_when_enabled_approved_and_consented(self) -> None:
+        policy = self.gratitude.ResponseCapturePolicy(
+            enabled=True,
+            consent_required=True,
+            policy_decision="approved",
+            policy_path="policies/GBRAIN_POLICY.md",
+            gbrain_collection="personal/gratitude",
+            gbrain_page="personal/gratitude/replies.md",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self.gratitude.capture_gratitude_reply(
+                reply_text="private gratitude answer",
+                consent_granted=True,
+                policy=policy,
+                gbrain_root=tmpdir,
+            )
+            page = Path(tmpdir) / "personal/gratitude/replies.md"
+
+            self.assertEqual(result["status"], "captured")
+            self.assertTrue(result["gbrain_writes"])
+            self.assertEqual(result["gbrain_page"], "personal/gratitude/replies.md")
+            self.assertIn("private gratitude answer", page.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
