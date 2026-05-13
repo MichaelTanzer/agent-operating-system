@@ -1,156 +1,735 @@
-# watchlist.yaml — MT's company and industry watchlist
-# Source-controlled. Add/remove tickers here; scripts read this file.
-# Runtime path is set in jobs.yaml system.watchlist_path
+# watchlist.yaml — MT's approved 23-company Watchlist Digest universe
+# Source-controlled. No secrets. Runtime path is set in jobs.yaml system.watchlist_path.
+# Important: approved_company_count must remain 23 unless MT explicitly adds another company.
+
+version: 2
+approved_company_count: 23
+source_rubric_path: morning-briefing/config/source_rubric.yaml
 
 companies:
   - name: Aon
     ticker: AON
-    sector: insurance-broking
-    industries: [insurance, risk-management]
-    notes: ""
+    exchange: NYSE
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Aon plc
+      - Aon Corporation
+      - Aon Reinsurance
+      - Aon Risk Capital
+      - Aon Health Solutions
+    material_topics:
+      - organic_growth
+      - commercial_insurance_pricing
+      - reinsurance_market_conditions
+      - fiduciary_investment_income
+      - restructuring_and_margin_expansion
+      - human_capital_consulting
+      - large_account_retention
+      - acquisitions_and_integration
+    query_focus:
+      - '"Aon" earnings transcript organic revenue fiduciary investment income'
+      - '"Aon" reinsurance treaty renewal pricing casualty property'
+      - '"Aon" risk capital strategy margin expansion acquisition'
+    noise_exclusions:
+      - "benefits-plan advice with no impact on Aon economics"
+      - "generic broker ranking lists"
 
   - name: ArcBest
     ticker: ARCB
+    exchange: NASDAQ
     sector: logistics
-    industries: [trucking, LTL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - ArcBest Corporation
+      - ABF Freight
+      - Panther Premium Logistics
+      - MoLo Solutions
+    material_topics:
+      - LTL_tonnage_and_yield
+      - asset_based_network_density
+      - brokerage_cycle
+      - labor_costs_and_teamsters_contract
+      - shipment_mix
+      - operating_ratio
+      - acquired_brokerage_integration
+    query_focus:
+      - '"ArcBest" ABF Freight LTL tonnage yield operating ratio'
+      - '"ARCB" earnings transcript MoLo brokerage integration'
+      - '"ArcBest" labor contract Teamsters cost productivity'
+    noise_exclusions:
+      - "routine terminal community awards"
+      - "spot freight-rate snippets not tied to ArcBest mix"
 
   - name: Arthur J. Gallagher
     ticker: AJG
-    sector: insurance-broking
-    industries: [insurance, risk-management]
-    notes: ""
+    exchange: NYSE
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Arthur J Gallagher & Co
+      - Arthur J. Gallagher & Co.
+      - Gallagher
+      - Gallagher Re
+      - AJG
+    material_topics:
+      - tuck_in_acquisition_cadence
+      - organic_growth
+      - integration_execution
+      - specialty_and_reinsurance_broking
+      - margin_expansion
+      - producer_recruiting
+      - commercial_P_C_rate_environment
+    query_focus:
+      - '"Arthur J. Gallagher" organic growth tuck-in acquisitions margin'
+      - '"Gallagher Re" reinsurance pricing treaty renewal'
+      - '"AJG" earnings transcript acquisition pipeline integration'
+    noise_exclusions:
+      - "small office opening unless tied to acquisition or specialty vertical"
+      - "producer appointment with no segment context"
 
   - name: Brown & Brown
     ticker: BRO
-    sector: insurance-broking
-    industries: [insurance, specialty-lines]
-    notes: ""
+    exchange: NYSE
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Brown & Brown Inc.
+      - Brown and Brown
+      - Brown & Brown Insurance
+      - Bridge Specialty Group
+    material_topics:
+      - decentralized_acquisition_model
+      - organic_growth
+      - E_and_S_wholesale
+      - programs_and_specialty_lines
+      - margin_resilience
+      - fiduciary_investment_income
+      - integration_risk
+    query_focus:
+      - '"Brown & Brown" organic revenue acquisition margin wholesale'
+      - '"Bridge Specialty Group" E&S wholesale growth'
+      - '"BRO" earnings transcript fiduciary investment income'
+    noise_exclusions:
+      - "local agency sponsorships"
+      - "agency awards with no production or acquisition data"
 
   - name: Bureau Veritas
-    ticker: BV
-    sector: testing-inspection-certification
-    industries: [TIC, quality-assurance]
-    notes: ""
+    ticker: BVI.PA
+    exchange: Euronext Paris
+    sector: tic
+    sector_label: Testing, Inspection & Certification
+    aliases:
+      - Bureau Veritas SA
+      - Bureau Veritas Group
+      - BV
+      - Bureau Veritas Certification
+    material_topics:
+      - organic_growth
+      - testing_inspection_certification_outsourcing
+      - sustainability_and_assurance
+      - marine_and_offshore_cycle
+      - commodities_and_buildings_exposure
+      - accreditation_and_regulation
+      - margin_programs
+    query_focus:
+      - '"Bureau Veritas" organic growth margin sustainability assurance'
+      - '"Bureau Veritas" TIC regulation accreditation testing inspection'
+      - '"BVI.PA" earnings transcript marine commodities buildings'
+    noise_exclusions:
+      - "routine certificate issued to a single small client"
+      - "generic ESG award without revenue or regulatory context"
 
   - name: C.H. Robinson
     ticker: CHRW
+    exchange: NASDAQ
     sector: logistics
-    industries: [freight-brokerage, 3PL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - C.H. Robinson Worldwide
+      - CH Robinson
+      - C H Robinson
+      - Robinson Fresh
+      - C.H. Robinson
+    material_topics:
+      - truckload_brokerage_cycle
+      - net_revenue_margin
+      - digital_freight_matching
+      - cost_reduction_and_productivity
+      - global_forwarding
+      - market_share
+      - management_execution
+    query_focus:
+      - '"C.H. Robinson" net revenue margin truckload brokerage productivity'
+      - '"CHRW" earnings transcript digital freight matching cost savings'
+      - '"C.H. Robinson" forwarding margin market share'
+    noise_exclusions:
+      - "produce-season commentary without Robinson economics"
+      - "generic freight-rate updates with no brokerage margin read-through"
 
   - name: DSV
-    ticker: DSV
+    ticker: DSV.CO
+    exchange: Nasdaq Copenhagen
     sector: logistics
-    industries: [freight-forwarding, 3PL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - DSV A/S
+      - DSV Panalpina
+      - DSV Global Transport and Logistics
+      - DSV Air & Sea
+      - DSV Solutions
+    material_topics:
+      - freight_forwarding_cycle
+      - air_and_ocean_yield
+      - acquisition_integration
+      - Schenker_integration
+      - contract_logistics_growth
+      - capital_allocation
+      - productivity_and_scale_advantages
+    query_focus:
+      - '"DSV" air sea yield freight forwarding margin'
+      - '"DSV" Schenker integration acquisition synergies'
+      - '"DSV.CO" earnings transcript capital allocation productivity'
+    noise_exclusions:
+      - "single-country service launch without network relevance"
+      - "port congestion blurbs without DSV margin or volume impact"
 
   - name: Eurofins Scientific
-    ticker: ERF
-    sector: testing-inspection-certification
-    industries: [TIC, laboratory-testing]
-    notes: ""
+    ticker: ERF.PA
+    exchange: Euronext Paris
+    sector: tic
+    sector_label: Testing, Inspection & Certification
+    aliases:
+      - Eurofins Scientific SE
+      - Eurofins
+      - Eurofins BioPharma
+      - Eurofins Environment Testing
+      - Eurofins Food Testing
+    material_topics:
+      - laboratory_testing_demand
+      - biopharma_services
+      - food_and_environment_regulation
+      - network_density
+      - pricing_and_utilization
+      - acquisitions_and_startups
+      - leverage_and_cash_conversion
+    query_focus:
+      - '"Eurofins" laboratory testing organic growth margin biopharma'
+      - '"Eurofins Scientific" food environment regulation PFAS testing'
+      - '"ERF.PA" earnings transcript acquisitions cash conversion'
+    noise_exclusions:
+      - "single lab accreditation with no capacity/regulatory implication"
+      - "COVID testing nostalgia unless tied to normalized earnings"
 
   - name: Forward Air
     ticker: FWRD
+    exchange: NASDAQ
     sector: logistics
-    industries: [LTL, expedited-freight]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - Forward Air Corporation
+      - Forward Air Corp.
+      - Omni Logistics
+      - Forward Air LTL
+    material_topics:
+      - Omni_integration
+      - expedited_LTL_network
+      - debt_and_deleveraging
+      - customer_retention
+      - operating_ratio
+      - board_and_management_change
+      - strategic_alternatives
+    query_focus:
+      - '"Forward Air" Omni integration debt deleveraging customer retention'
+      - '"FWRD" earnings transcript expedited LTL operating ratio'
+      - '"Forward Air" strategic alternatives management change'
+    noise_exclusions:
+      - "routine cargo-service announcement"
+      - "stock volatility coverage without new Omni integration facts"
 
   - name: GXO Logistics
     ticker: GXO
+    exchange: NYSE
     sector: logistics
-    industries: [contract-logistics, 3PL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - GXO Logistics Inc.
+      - GXO
+      - Clipper Logistics
+      - PFSweb
+      - GXO Direct
+    material_topics:
+      - contract_logistics_outsourcing
+      - automation_and_robotics
+      - ecommerce_and_omnichannel
+      - new_business_wins
+      - renewal_rates
+      - margin_ramp
+      - M_and_A_or_takeover_interest
+    query_focus:
+      - '"GXO" contract logistics automation margin new business wins'
+      - '"GXO Logistics" outsourcing ecommerce omnichannel robotics'
+      - '"GXO" earnings transcript pipeline renewal rates'
+    noise_exclusions:
+      - "single warehouse opening unless tied to major customer or automation model"
+      - "robotics vendor press release with no GXO economics"
 
   - name: Intertek Group
-    ticker: ITRK
-    sector: testing-inspection-certification
-    industries: [TIC, product-testing]
-    notes: ""
+    ticker: ITRK.L
+    exchange: London Stock Exchange
+    sector: tic
+    sector_label: Testing, Inspection & Certification
+    aliases:
+      - Intertek
+      - Intertek Group plc
+      - Intertek Testing Services
+      - Caleb Brett
+      - Intertek Total Quality Assurance
+    material_topics:
+      - product_testing_demand
+      - assurance_and_certification
+      - commodities_and_trade
+      - China_and_consumer_goods_exposure
+      - margin_targets
+      - ATIC_strategy
+      - regulation_and_standards
+    query_focus:
+      - '"Intertek" product testing assurance certification organic growth margin'
+      - '"Intertek" ATIC strategy China consumer goods commodities'
+      - '"ITRK.L" earnings transcript regulation standards testing'
+    noise_exclusions:
+      - "routine certification announcement without new standard"
+      - "generic consumer product safety post not tied to testing demand"
 
   - name: Kuehne+Nagel
-    ticker: KNIN
+    ticker: KNIN.SW
+    exchange: SIX Swiss Exchange
     sector: logistics
-    industries: [freight-forwarding, contract-logistics]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - Kuehne Nagel
+      - Kuehne + Nagel
+      - Kühne+Nagel
+      - Kuehne und Nagel
+      - Kuehne+Nagel International AG
+      - K+N
+    material_topics:
+      - sea_logistics_yield
+      - air_logistics_yield
+      - contract_logistics
+      - conversion_rate
+      - digital_platforms
+      - capital_returns
+      - market_share_and_volume
+    query_focus:
+      - '"Kuehne+Nagel" sea logistics yield conversion rate volume'
+      - '"Kuehne Nagel" air logistics margin freight forwarding'
+      - '"KNIN.SW" earnings transcript capital returns market share'
+    noise_exclusions:
+      - "local branch awards"
+      - "container-rate article without Kuehne+Nagel margin/volume linkage"
 
   - name: Mainfreight
-    ticker: MFT
+    ticker: MFT.NZ
+    exchange: New Zealand Exchange
     sector: logistics
-    industries: [supply-chain, 3PL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - Mainfreight Limited
+      - Mainfreight Ltd
+      - Mainfreight Transport
+      - Mainfreight Warehousing
+    material_topics:
+      - culture_and_decentralization
+      - network_expansion
+      - operating_leverage
+      - regional_profitability
+      - air_and_ocean_forwarding
+      - warehousing_growth
+      - owner_operator_model
+    query_focus:
+      - '"Mainfreight" annual report culture network expansion operating leverage'
+      - '"Mainfreight" regional profit warehousing air ocean forwarding'
+      - '"MFT.NZ" earnings results owner operator model'
+    noise_exclusions:
+      - "single depot community story unless it signals network expansion"
+      - "NZ market recap without operating data"
 
-  - name: Marsh & McLennan
+  - name: Marsh McLennan
     ticker: MMC
-    sector: insurance-broking
-    industries: [insurance, consulting, risk-management]
-    notes: ""
+    exchange: NYSE
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Marsh & McLennan
+      - Marsh McLennan Companies
+      - Marsh LLC
+      - Guy Carpenter
+      - Mercer
+      - Oliver Wyman
+      - MMC
+    material_topics:
+      - risk_and_insurance_services_growth
+      - consulting_cycle
+      - reinsurance_broking
+      - fiduciary_investment_income
+      - margin_expansion
+      - capital_allocation
+      - leadership_and_segment_strategy
+    query_focus:
+      - '"Marsh McLennan" organic revenue margin fiduciary investment income'
+      - '"Guy Carpenter" reinsurance pricing renewal Marsh McLennan'
+      - '"MMC" earnings transcript Mercer Oliver Wyman consulting demand'
+    noise_exclusions:
+      - "benefits survey article with no Mercer economics"
+      - "routine thought-leadership note without original data"
 
   - name: Old Dominion Freight Line
     ticker: ODFL
+    exchange: NASDAQ
     sector: logistics
-    industries: [LTL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - Old Dominion Freight Line Inc.
+      - Old Dominion
+      - ODFL
+      - OD Freight
+    material_topics:
+      - LTL_pricing_discipline
+      - service_quality
+      - terminal_network_capacity
+      - tonnage_and_shipments
+      - operating_ratio
+      - yield_management
+      - capex_and_real_estate
+    query_focus:
+      - '"Old Dominion Freight Line" LTL yield tonnage operating ratio'
+      - '"ODFL" earnings transcript service quality pricing discipline'
+      - '"Old Dominion" terminal network capacity capex real estate'
+    noise_exclusions:
+      - "local fleet safety award unless tied to service advantage"
+      - "daily trucking-stock recap"
 
   - name: RXO
     ticker: RXO
+    exchange: NYSE
     sector: logistics
-    industries: [freight-brokerage, managed-transportation]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - RXO Inc.
+      - RXO Connect
+      - RXO Last Mile
+      - Coyote Logistics
+    material_topics:
+      - truck_brokerage_cycle
+      - Coyote_integration
+      - gross_margin_per_load
+      - digital_brokerage_automation
+      - managed_transportation
+      - last_mile
+      - share_gain_in_downcycle
+    query_focus:
+      - '"RXO" Coyote integration truck brokerage gross margin per load'
+      - '"RXO" earnings transcript digital brokerage managed transportation'
+      - '"RXO" last mile market share automation'
+    noise_exclusions:
+      - "load-board chatter with no RXO metric"
+      - "short-term freight-rate commentary without brokerage margin signal"
 
   - name: Ryan Specialty
     ticker: RYAN
-    sector: insurance-broking
-    industries: [specialty-insurance, E&S]
-    notes: ""
+    exchange: NYSE
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Ryan Specialty Holdings
+      - Ryan Specialty Group
+      - RT Specialty
+      - Ryan Re Underwriting Managers
+      - Socius Insurance Services
+    material_topics:
+      - wholesale_E_and_S_growth
+      - delegated_authority_underwriting
+      - acquisition_integration
+      - specialty_programs
+      - organic_growth
+      - margin_expansion
+      - casualty_market_hardness
+    query_focus:
+      - '"Ryan Specialty" E&S wholesale organic growth margin acquisition'
+      - '"RT Specialty" casualty market wholesale insurance'
+      - '"RYAN" earnings transcript delegated authority underwriting'
+    noise_exclusions:
+      - "routine underwriting appointment"
+      - "generic E&S market note not linked to wholesale broker economics"
 
   - name: Saia
     ticker: SAIA
+    exchange: NASDAQ
     sector: logistics
-    industries: [LTL]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - Saia Inc.
+      - Saia LTL Freight
+      - Saia Motor Freight
+      - Saia Freight
+    material_topics:
+      - LTL_terminal_expansion
+      - yield_and_pricing
+      - shipment_growth
+      - operating_ratio
+      - service_quality
+      - Yellow_freight_opportunity
+      - labor_and_linehaul_productivity
+    query_focus:
+      - '"Saia" LTL terminal expansion yield operating ratio'
+      - '"SAIA" earnings transcript pricing shipments service quality'
+      - '"Saia" Yellow freight terminal acquisition network capacity'
+    noise_exclusions:
+      - "terminal ribbon cutting with no capacity or market-share data"
+      - "generic LTL index item without Saia exposure"
 
   - name: SGS
-    ticker: SGSN
-    sector: testing-inspection-certification
-    industries: [TIC, certification]
-    notes: ""
+    ticker: SGSN.SW
+    exchange: SIX Swiss Exchange
+    sector: tic
+    sector_label: Testing, Inspection & Certification
+    aliases:
+      - SGS SA
+      - Societe Generale de Surveillance
+      - SGS Group
+      - SGS Testing Inspection Certification
+    material_topics:
+      - TIC_market_growth
+      - portfolio_restructuring
+      - connectivity_and_products
+      - natural_resources_exposure
+      - certification_and_accreditation
+      - margin_programs
+      - sustainability_services
+    query_focus:
+      - '"SGS" organic growth margin TIC certification sustainability'
+      - '"SGSN.SW" earnings transcript portfolio restructuring natural resources'
+      - '"SGS" testing inspection accreditation regulation'
+    noise_exclusions:
+      - "routine client certificate without broader standard change"
+      - "commodity inspection article with no SGS economics"
 
   - name: Baldwin Insurance Group
     ticker: BWIN
-    sector: insurance-broking
-    industries: [insurance, specialty-lines]
-    notes: ""
+    exchange: NASDAQ
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - The Baldwin Insurance Group
+      - Baldwin Risk Partners
+      - BRP Group
+      - Guided Insurance Solutions
+      - Millennial Specialty Insurance
+    material_topics:
+      - rebrand_and_platform_strategy
+      - organic_growth
+      - specialty_distribution
+      - debt_and_cash_flow
+      - acquisition_integration
+      - margin_expansion
+      - private_client_and_middle_market
+    query_focus:
+      - '"Baldwin Insurance Group" organic growth margin debt cash flow'
+      - '"BWIN" earnings transcript specialty distribution integration'
+      - '"Baldwin Risk Partners" rebrand platform strategy insurance'
+    noise_exclusions:
+      - "legacy BRP ticker confusion without current BWIN facts"
+      - "local agency post with no acquisition or platform signal"
 
   - name: UL Solutions
     ticker: ULS
-    sector: testing-inspection-certification
-    industries: [TIC, safety-certification]
-    notes: ""
+    exchange: NYSE
+    sector: tic
+    sector_label: Testing, Inspection & Certification
+    aliases:
+      - UL Solutions Inc.
+      - Underwriters Laboratories
+      - UL LLC
+      - UL Certification
+      - UL Standards & Engagement
+    material_topics:
+      - safety_certification_demand
+      - software_and_advisory
+      - energy_transition_testing
+      - connected_products_and_cybersecurity
+      - margin_profile_post_IPO
+      - standards_development
+      - regulatory_complexity
+    query_focus:
+      - '"UL Solutions" safety certification testing margin software advisory'
+      - '"ULS" earnings transcript IPO standards energy transition'
+      - '"UL" cybersecurity certification connected products regulation'
+    noise_exclusions:
+      - "single product certification with no end-market or standard implication"
+      - "confusion with University of Louisiana or unrelated UL acronym"
 
   - name: WTW
     ticker: WTW
-    sector: insurance-broking
-    industries: [insurance, human-capital, risk-management]
-    notes: ""
+    exchange: NASDAQ
+    sector: insurance_broking
+    sector_label: Insurance Brokerage & Risk Advisory
+    aliases:
+      - Willis Towers Watson
+      - WTW plc
+      - Willis
+      - Towers Watson
+      - Willis Re
+    material_topics:
+      - risk_and_broking_growth
+      - health_wealth_and_career_consulting
+      - turnaround_execution
+      - margin_expansion
+      - fiduciary_investment_income
+      - talent_retention
+      - reinsurance_and_specialty
+    query_focus:
+      - '"WTW" organic growth margin turnaround fiduciary investment income'
+      - '"Willis Towers Watson" risk broking health wealth career consulting'
+      - '"WTW" earnings transcript talent retention reinsurance specialty'
+    noise_exclusions:
+      - "weather acronym WTW false positives"
+      - "HR tips article without WTW revenue or margin relevance"
 
   - name: XPO
     ticker: XPO
+    exchange: NYSE
     sector: logistics
-    industries: [LTL, freight]
-    notes: ""
+    sector_label: Logistics & Supply Chain
+    aliases:
+      - XPO Inc.
+      - XPO Logistics
+      - XPO LTL
+      - Con-way Freight
+    material_topics:
+      - LTL_yield_and_tonnage
+      - service_quality
+      - network_optimization
+      - Yellow_terminal_integration
+      - operating_ratio_improvement
+      - labor_productivity
+      - Europe_transport_exposure
+    query_focus:
+      - '"XPO" LTL yield tonnage operating ratio service quality'
+      - '"XPO" Yellow terminals network optimization labor productivity'
+      - '"XPO" earnings transcript Europe transport margin'
+    noise_exclusions:
+      - "legacy GXO/RXO spinoff mention without current XPO facts"
+      - "daily trucking-stock recap"
 
-industries:
-  # Cross-company industry themes to monitor
-  - id: logistics
+sectors:
+  logistics:
     label: Logistics & Supply Chain
-    keywords: [freight, trucking, LTL, 3PL, supply-chain, logistics, warehousing]
+    keywords:
+      - freight
+      - trucking
+      - LTL
+      - less-than-truckload
+      - freight forwarding
+      - contract logistics
+      - 3PL
+      - brokerage
+      - warehousing
+      - air freight
+      - ocean freight
+    material_topics:
+      - pricing_yield
+      - volume_tonnage_shipments
+      - operating_ratio
+      - network_density
+      - terminal_capacity
+      - automation
+      - outsourcing
+      - acquisition_integration
+      - labor_productivity
 
-  - id: insurance-broking
-    label: Insurance Brokerage & Risk Management
-    keywords: [insurance, brokerage, specialty-lines, risk-management, E&S, reinsurance]
+  insurance_broking:
+    label: Insurance Brokerage & Risk Advisory
+    keywords:
+      - insurance brokerage
+      - risk advisory
+      - reinsurance
+      - wholesale insurance
+      - E&S
+      - employee benefits
+      - consulting
+      - fiduciary investment income
+      - commercial P&C
+    material_topics:
+      - organic_growth
+      - commercial_rate_environment
+      - fiduciary_investment_income
+      - producer_hiring_and_retention
+      - tuck_in_acquisitions
+      - margin_expansion
+      - specialty_distribution
+      - consulting_demand
 
-  - id: tic
+  tic:
     label: Testing, Inspection & Certification
-    keywords: [TIC, testing, inspection, certification, quality-assurance, laboratory]
+    keywords:
+      - TIC
+      - testing
+      - inspection
+      - certification
+      - accreditation
+      - standards
+      - laboratory testing
+      - product safety
+      - assurance
+      - compliance
+    material_topics:
+      - regulatory_complexity
+      - standards_changes
+      - outsourcing_penetration
+      - lab_utilization
+      - product_safety
+      - sustainability_assurance
+      - energy_transition_testing
+      - margin_programs
+
+source_quality_taxonomy:
+  source_rubric_path: morning-briefing/config/source_rubric.yaml
+  summary:
+    tier1_primary: "Filings, earnings, investor presentations, regulator notices, and official company disclosures."
+    tier2_verified_business_press: "Independent reporting from Reuters/Bloomberg/WSJ/FT and reputable sector trade press."
+    tier3_expert_research_and_white_papers: "Consulting, rating-agency, association, and specialist research used for context."
+    tier4_specialist_blogs_and_newsletters: "Practitioner commentary requiring corroboration."
+    tier5_low_quality_or_noise: "Automated stock pages, content farms, social rumors, and rewrites; exclude by default."
+
+consulting_white_paper_query_patterns:
+  global:
+    - '"{sector_label}" "white paper" pricing margin regulation automation'
+    - '"{sector_label}" McKinsey OR BCG OR Bain OR Deloitte OR PwC OR EY OR KPMG outlook'
+    - '"{sector_label}" "market structure" "consolidation" "pricing power"'
+    - '"{company}" "case study" "operating model" "network"'
+  logistics:
+    - 'LTL freight pricing tonnage yield terminal network automation white paper'
+    - 'freight forwarding air ocean rates contract logistics automation outlook'
+    - '3PL outsourcing warehouse automation inventory destocking restocking survey'
+  insurance_broking:
+    - 'commercial insurance rate environment casualty property reinsurance broker commission outlook'
+    - 'insurance brokerage organic growth fiduciary investment income E&S wholesale report'
+    - 'employee benefits consulting human capital risk advisory margin survey'
+  tic:
+    - 'testing inspection certification regulation accreditation standards outsourcing report'
+    - 'TIC laboratory testing PFAS ESG supply chain assurance cybersecurity certification white paper'
+    - 'product safety certification ISO IEC UL standards compliance outlook'
+
+low_quality_noise_exclusions:
+  - automated_stock_price_recaps
+  - analyst_price_target_only
+  - zacks_rank_or_factor_score_only
+  - marketbeat_or_simplywallst_roundups
+  - duplicated_press_release_rewrites
+  - generic_market_size_listicles
+  - sponsored_vendor_posts_without_original_data
+  - social_media_rumors_without_primary_source
+  - conference_attendance_notices_without_new_content
+  - local_awards_or_charity_items_without_business_signal
+  - ETF_or_index_mentions_without_company_specific_fact

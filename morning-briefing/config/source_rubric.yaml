@@ -1,0 +1,182 @@
+# source_rubric.yaml — source-quality taxonomy for the Watchlist Digest
+# Source-controlled. No secrets. Used by the company_watchlist agent to rank
+# long-term trajectory signals above short-term stock/news noise.
+
+version: 1
+purpose: >-
+  Rank Watchlist Digest inputs by durability, source quality, and relevance to
+  MT's long-term company trajectory work. Prefer primary documents and high-signal
+  industry sources; down-rank market chatter, commodity quote pages, and recycled
+  press-release rewrites.
+
+source_tiers:
+  tier1_primary:
+    rank: 1
+    label: Primary filings, earnings, and official disclosures
+    use_when: "Material company fact pattern, strategy, economics, capital allocation, or governance signal."
+    examples:
+      - SEC filings: 10-K, 10-Q, 8-K, DEF 14A, S-1
+      - Annual reports and investor-day decks
+      - Earnings releases, transcripts, and conference-call Q&A
+      - Company IR presentations and official press releases
+      - Regulator publications and enforcement notices that name a company or core market
+    default_action: include_if_material
+
+  tier2_verified_business_press:
+    rank: 2
+    label: Verified business, trade, and financial press
+    use_when: "Independent reporting adds facts, context, or corroboration beyond a press release."
+    examples:
+      - Reuters
+      - Bloomberg
+      - Wall Street Journal
+      - Financial Times
+      - FreightWaves
+      - Journal of Commerce
+      - Commercial Carrier Journal
+      - Insurance Insider
+      - Business Insurance
+      - The Insurer
+      - Carrier Management
+      - TIC Council and industry-association publications
+    default_action: include_if_company_or_market_material
+
+  tier3_expert_research_and_white_papers:
+    rank: 3
+    label: Consulting, expert, and institutional research
+    use_when: "Useful for industry structure, end-market demand, regulation, technology adoption, and procurement shifts."
+    examples:
+      - McKinsey, BCG, Bain, Oliver Wyman, Deloitte, PwC, EY, KPMG
+      - Gartner, Forrester, IDC, S&P Global, Moody's, Fitch
+      - Marsh, Aon, WTW, Gallagher, Swiss Re Institute, Munich Re, Lloyd's market reports
+      - Transport Intelligence, Armstrong & Associates, CSCMP, ATA, ACT Research
+      - TIC Council, ISO, IEC, UL Standards, ASTM, IAF, ILAC
+    default_action: include_as_context_not_headline_unless_new
+
+  tier4_specialist_blogs_and_newsletters:
+    rank: 4
+    label: Specialist blogs, newsletters, podcasts, and practitioner commentary
+    use_when: "May surface early qualitative signals, but requires corroboration before becoming a digest item."
+    examples:
+      - Founder/operator newsletters focused on logistics, insurance, or TIC
+      - Analyst blogs with disclosed methodology
+      - Industry podcasts with executive interviews
+      - Vendor blogs only when they provide original data or survey results
+    default_action: corroborate_before_include
+
+  tier5_low_quality_or_noise:
+    rank: 5
+    label: Low-quality, duplicative, or market-noise sources
+    use_when: "Usually excluded unless they point to a verifiable tier1/tier2 source."
+    examples:
+      - Automated stock-price recap pages
+      - Unattributed SEO content farms
+      - Rewritten press releases with no added reporting
+      - Generic market-size listicles
+      - Social media rumors
+      - Sponsored vendor content without original data
+    default_action: exclude
+
+materiality_signals:
+  include:
+    - strategy_shift
+    - pricing_power
+    - organic_growth_or_share_gain
+    - margin_structure
+    - capital_allocation
+    - acquisitions_or_divestitures
+    - integration_execution
+    - management_change
+    - regulatory_or_compliance_change
+    - technology_or_automation_adoption
+    - customer_mix_or_end_market_change
+    - capacity_or_network_change
+    - underwriting_cycle_or_insurance_market_hardness
+    - litigation_or_quality_failure
+    - safety_or_certification_regime_change
+  exclude_unless_extreme:
+    - daily_stock_move
+    - analyst_price_target_change
+    - generic_earnings_preview
+    - ex_dividend_notice
+    - insider_form_4_without_pattern
+    - small_award_or_local_charity_item
+    - undifferentiated_market_size_forecast
+    - recycled_press_release
+
+noise_exclusions:
+  global:
+    - "stock rose/fell today"
+    - "price target raised/lowered"
+    - "Zacks rank"
+    - "Simply Wall St valuation"
+    - "MarketBeat analyst ratings roundup"
+    - "ETF flow mention with no company-specific facts"
+    - "class action ad with no new filing"
+    - "generic AI/blockchain press release"
+    - "conference attendance notice with no new content"
+  logistics:
+    - "single-lane spot-rate move without network implication"
+    - "weather disruption unless it alters capacity, service, or claims materially"
+    - "driver-of-the-month/local terminal award"
+  insurance_broking:
+    - "routine producer hire unless it indicates specialty buildout or regional M&A"
+    - "carrier rate chatter without line-of-business or broker economics detail"
+    - "benefits enrollment tips not tied to WTW/MMC/Aon economics"
+  tic:
+    - "commodity product recall unless it names TIC failure, new standard, or testing demand"
+    - "routine certificate issuance with no standard/regulatory change"
+    - "lab equipment vendor release without customer or capacity impact"
+
+query_patterns:
+  filings_and_ir:
+    - '"{company}" investor relations annual report'
+    - '"{company}" earnings transcript pricing margins acquisition integration'
+    - '"{company}" investor day strategy capital allocation'
+    - '"{ticker}" 10-K risk factors segment revenue'
+  verified_press:
+    - '"{company}" Reuters acquisition margin pricing strategy'
+    - '"{company}" Bloomberg management change acquisition regulation'
+    - '"{company}" "Financial Times" logistics insurance testing certification'
+  consulting_white_papers:
+    - '"{sector_label}" "white paper" pricing margins regulation automation'
+    - '"{sector_label}" McKinsey BCG Bain Deloitte PwC EY KPMG outlook'
+    - '"{sector_label}" "market structure" "pricing power" "consolidation"'
+    - '"{company}" "case study" "operating model" "network"'
+  sector_specific:
+    logistics:
+      - 'LTL freight pricing tonnage yield terminal network automation'
+      - 'freight forwarding market air ocean rates contract logistics automation'
+      - '3PL outsourcing warehouse automation inventory destocking restocking'
+    insurance_broking:
+      - 'insurance brokerage organic growth fiduciary investment income E&S wholesale'
+      - 'commercial insurance rate environment casualty property reinsurance broker commission'
+      - 'employee benefits consulting human capital risk advisory margin'
+    tic:
+      - 'testing inspection certification regulation accreditation standards outsourcing'
+      - 'TIC laboratory testing PFAS ESG supply chain assurance cybersecurity certification'
+      - 'product safety certification ISO IEC UL standards compliance'
+
+scoring:
+  base_points_by_tier:
+    tier1_primary: 5
+    tier2_verified_business_press: 4
+    tier3_expert_research_and_white_papers: 3
+    tier4_specialist_blogs_and_newsletters: 2
+    tier5_low_quality_or_noise: 0
+  boosts:
+    company_named: 2
+    ticker_named_with_context: 1
+    material_topic_match: 2
+    primary_data_or_original_research: 2
+    multi_source_corroboration: 2
+    long_term_economics_signal: 3
+  penalties:
+    stock_price_only: -5
+    duplicate_press_release: -3
+    sponsored_or_vendor_only: -2
+    no_named_source_or_author: -2
+    headline_without_new_facts: -2
+  include_threshold: 6
+  context_threshold: 4
+  exclude_below: 4

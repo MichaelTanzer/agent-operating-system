@@ -104,6 +104,35 @@ def create_db(path: Path) -> None:
         """,
         tasks,
     )
+    conn.executemany(
+        """
+        INSERT INTO tasks(id, title, body, assignee, status, priority, created_by, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                "t_review_wrong_profile",
+                "Review PR for auth cleanup",
+                "Acceptance: review PR and report blocking issues.",
+                "coder",
+                "ready",
+                5,
+                "user",
+                1000,
+            ),
+            (
+                "t_idea",
+                "Idea: agent memory dashboard",
+                "Maybe we should someday build a dashboard for agent memory.",
+                "default",
+                "todo",
+                1,
+                "user",
+                1000,
+            ),
+            ("t_vague", "Improve docs", "TBD", "default", "todo", 1, "user", 1000),
+        ],
+    )
     conn.execute("INSERT INTO task_links VALUES (?, ?)", ("t_ready", "t_blocked"))
     conn.execute(
         "INSERT INTO task_comments(task_id, author, body, created_at) VALUES (?, ?, ?, ?)",
@@ -140,7 +169,7 @@ class KanbanCollectorTest(unittest.TestCase):
         self.assertEqual("kanban_morning_brief", payload["job"])
         self.assertFalse(payload["kanban_mutations"])
         self.assertEqual(2, payload["summary"]["boards"])
-        self.assertEqual(4, payload["summary"]["tasks"])
+        self.assertEqual(7, payload["summary"]["tasks"])
         self.assertEqual(1, payload["summary"]["blocked_tasks"])
         self.assertEqual(1, payload["summary"]["running_or_claimed_tasks"])
         self.assertEqual(1, payload["summary"]["completed_since_last_run"])
@@ -278,9 +307,20 @@ class KanbanCollectorTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
             self.assertEqual("kanban_cleanup_proposal", payload["job"])
+            self.assertEqual("approval_ready", payload["proposal_status"])
             self.assertFalse(payload["kanban_mutations"])
+            self.assertTrue(payload["no_changes_made"])
+            self.assertIn("No Kanban changes were made", payload["safety_notice"])
             self.assertIn("stale_tasks", payload)
             self.assertIn("archivable_items", payload)
+            self.assertIn("missing_acceptance_criteria", payload)
+            self.assertIn("vague_tasks_needing_rewrite", payload)
+            self.assertIn("non_actionable_ideas_for_gbrain", payload)
+            self.assertIn("wrong_profile_assignments", payload)
+            self.assertGreaterEqual(payload["summary"]["total_recommendations"], 1)
+            self.assertTrue(any(item["id"] == "t_review_wrong_profile" for item in payload["wrong_profile_assignments"]))
+            self.assertTrue(any(item["id"] == "t_idea" for item in payload["non_actionable_ideas_for_gbrain"]))
+            self.assertTrue(any(item["id"] == "t_vague" for item in payload["vague_tasks_needing_rewrite"]))
 
 
 if __name__ == "__main__":
