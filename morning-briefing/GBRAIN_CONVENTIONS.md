@@ -151,24 +151,25 @@ Rules:
 **Namespace prefix:** `guardrails/`
 
 Purpose: durable anti-patterns, scope-creep signals, and diagnostic observations
-drawn from Kanban run history and MT's operating patterns. The `no_do` job reads
-from here to generate its daily one-thing-not-to-do. Occasionally updated when
-a new pattern is worth keeping.
+drawn from Kanban run history, session-derived feedback, and MT's operating
+patterns. The `no_do` job reads from here to generate its daily
+one-thing-not-to-do: a diagnostic anti-priority, not coaching or scolding. See
+`BR-017_NO_DO_FEEDBACK.md` for the full BR-017 feedback-loop contract.
 
 Pages:
 
 | Page title pattern | Written by | Purpose |
 |---|---|---|
-| `guardrails/anti-patterns` | Manual + `no_do` job (infrequent) | Named anti-patterns with description and historical signal. |
+| `guardrails/anti-patterns` | Manual + consolidation task / `no_do` write mode (rare) | Named anti-patterns with description and historical signal. |
 | `guardrails/scope-creep-log` | Manual / kanban task | Documented instances of scope creep, with stable project references and resolution. |
-| `guardrails/diagnostic-observations` | Manual + `no_do` job (infrequent) | One-liner observations about MT's work patterns, dated. |
+| `guardrails/diagnostic-observations` | Manual + consolidation task / `no_do` write mode (rare) | One-liner observations about MT's work patterns, dated. |
 
 Fields in `guardrails/anti-patterns` entries:
 
 ```
 - name: "<pattern name>"
   description: "<2-3 sentences>"
-  signals: [kanban-pattern, watchlist-theme, etc.]
+  signals: [kanban-pattern, session-feedback, gbrain-observation]
   first_observed: YYYY-MM-DD
   last_triggered: YYYY-MM-DD
 ```
@@ -177,11 +178,20 @@ Rules:
 - `no_do` reads `guardrails/anti-patterns` and `guardrails/diagnostic-observations` every run.
 - `no_do` reads Kanban run history (last 7 days) directly from the board — it does not
   write Kanban state to Gbrain.
-- `no_do` writes to `guardrails/anti-patterns` **only** when it identifies a new pattern
-  that has appeared at least 3 times in the last 14 days and has no existing matching entry.
-  Write threshold is conservative: if unsure, don't write.
+- `no_do` may consume session-derived feedback only after it has been distilled into
+  a compact signal. Raw transcripts, chain-of-thought, and daily task logs are never
+  written into Gbrain.
+- A daily `no_do` delivery does **not** write to Gbrain. A future collector,
+  consolidation task, or explicit write mode may write to `guardrails/anti-patterns`
+  only when it identifies a new pattern that has either (a) at least two matching
+  source classes or (b) at least three matching signals across at least two dates,
+  and has no existing matching entry. Write threshold is conservative: if unsure,
+  don't write.
 - `no_do` must not write more than one new guardrail entry per calendar week.
 - Human-authored entries in `guardrails/` take precedence; the job must not overwrite them.
+- Persistent Hermes memory is only for stable user preferences/facts. Do not store
+  daily `no_do` outputs, Kanban run outcomes, or guardrail candidate state there;
+  use Gbrain after consolidation or local run state instead.
 
 ---
 
@@ -202,8 +212,10 @@ cross_domain_analogy   | ideas/analogy/ (last 30 days)          | ideas/analogy/
                        | morning-system/domain-list             |
 investment_question    | watchlist/<TICKER>                     | (none)
 gbrain_recall          | all namespaces (search, read-only)     | (none — recall metadata only)
-no_do                  | guardrails/anti-patterns               | guardrails/anti-patterns (rare)
-                       | guardrails/diagnostic-observations     |
+no_do                  | guardrails/anti-patterns               | (none on daily delivery)
+                       | guardrails/diagnostic-observations     | guardrails/anti-patterns (rare explicit consolidation/write mode)
+                       | Kanban recent runs (last 7 days)       | guardrails/diagnostic-observations (rare explicit consolidation/write mode)
+                       | session-derived feedback signals       |
 gratitude              | (none)                                 | (none)
 ```
 
@@ -246,8 +258,9 @@ These rules prevent Gbrain from becoming a noisy write-heavy store:
 
 3. `cross_domain_analogy` must not write today's analogy page if it already exists.
 
-4. `no_do` writes a guardrail entry at most once per 7 days per pattern name.
-   Check existing `last_triggered` before writing.
+4. `no_do` daily delivery must not write Gbrain. Rare explicit guardrail
+   consolidation/write mode may update at most once per 7 days per pattern name
+   after checking existing `last_triggered` and the BR-017 recurrence threshold.
 
 5. The `gbrain_recall` job must not surface the same note within 14 days.
    Recency tracking lives in `~/.hermes/morning/last_run/gbrain_recall.json`.
