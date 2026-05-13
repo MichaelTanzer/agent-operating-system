@@ -4,7 +4,7 @@
 
 system:
   timezone: America/New_York
-  delivery: telegram            # platform; home channel unless overridden per-job
+  delivery: discord             # temporary platform; switch to email once MT's inbox is ready
   state_dir: ~/.hermes/morning
   watchlist_path: morning-briefing/config/watchlist.yaml
   repo_root: ~/dev/repos/agent-operating-system
