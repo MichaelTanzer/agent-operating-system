@@ -58,7 +58,7 @@ def check_config() -> ConfigCheck:
     """
 
     try:
-        from config_loader import _jobs_yaml_path, _load_yaml, get_job
+        from config_loader import get_job, load_config
     except ImportError:
         return ConfigCheck(
             checked=False,
@@ -73,8 +73,7 @@ def check_config() -> ConfigCheck:
         )
 
     try:
-        jobs_config = _load_yaml(_jobs_yaml_path())
-        job = get_job({"jobs": jobs_config.get("jobs", {})}, JOB_NAME)
+        job = get_job(load_config(), JOB_NAME)
     except (AttributeError, FileNotFoundError, KeyError, SystemExit):
         return ConfigCheck(
             checked=False,
@@ -91,8 +90,8 @@ def check_config() -> ConfigCheck:
         problems.append("implementation is not script")
     if contract.get("format") != "prompt_message":
         problems.append("output format is not prompt_message")
-    if contract.get("text") != "What are three things you're grateful for?":
-        problems.append("prompt text contract changed")
+    if contract.get("text") != PROMPT_TEXT:
+        problems.append("prompt text contract does not match script output")
     if contract.get("expects_response") is not True:
         problems.append("expects_response is not true")
 

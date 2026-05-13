@@ -215,6 +215,12 @@ jobs:
     script: morning-briefing/scripts/gratitude.py
     output_contract:
       format: prompt_message
-      text: "What are three things you're grateful for?"
+      text: |-
+        MT, what are three things you're grateful for today?
+
+        Please reply with three short points:
+        1.
+        2.
+        3.
       expects_response: true
     dry_run_cmd: "python3 morning-briefing/scripts/gratitude.py --dry-run"
