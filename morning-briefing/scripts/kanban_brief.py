@@ -384,10 +384,125 @@ def collect_kanban(
     }
 
 
+def count_text(counts: dict[str, int]) -> str:
+    ordered_statuses = ("triage", "todo", "ready", "running", "blocked", "done", "archived")
+    parts = [f"{status} {counts[status]}" for status in ordered_statuses if counts.get(status)]
+    parts.extend(f"{status} {count}" for status, count in sorted(counts.items()) if status not in ordered_statuses and count)
+    return ", ".join(parts) if parts else "0 tasks"
+
+
+def task_line(task: dict[str, Any], *, include_reason: bool = False) -> str:
+    assignee = task.get("assignee") or "unassigned"
+    status = task.get("status") or "unknown"
+    title = str(task.get("title") or "").strip()
+    bits = [f"{task['id']} ({status}, {assignee})"]
+    if title:
+        bits.append(title)
+    if include_reason:
+        reasons = task.get("reasons") or task.get("signals") or []
+        if reasons:
+            bits.append("; ".join(str(reason) for reason in reasons[:3]))
+    return " — ".join(bits)
+
+
+def top_tasks(tasks: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    return sorted(tasks, key=lambda task: (-(task.get("priority") or 0), task.get("created_at") or "", task.get("id") or ""))[:limit]
+
+
+def gather_stuck_or_risky(board: dict[str, Any]) -> list[dict[str, Any]]:
+    by_id: dict[str, dict[str, Any]] = {}
+    for task in board.get("blocked_tasks", []):
+        by_id[task["id"]] = {**task, "reasons": ["blocked"]}
+    for task in board.get("stale_heartbeats_or_claims", []):
+        existing = by_id.get(task["id"], {})
+        reasons = list(dict.fromkeys([*(existing.get("reasons") or []), *(task.get("reasons") or [])]))
+        by_id[task["id"]] = {**existing, **task, "reasons": reasons}
+    for task in board.get("running_or_claimed_tasks", []):
+        if (task.get("consecutive_failures") or 0) >= 2:
+            existing = by_id.get(task["id"], {})
+            reasons = list(dict.fromkeys([*(existing.get("reasons") or []), "recent_failures"]))
+            by_id[task["id"]] = {**task, **existing, "reasons": reasons}
+    return list(by_id.values())
+
+
+def suggested_actions(payload: dict[str, Any], needs_mt: list[dict[str, Any]], stuck: list[dict[str, Any]], completed: list[dict[str, Any]]) -> list[str]:
+    actions: list[str] = []
+    if needs_mt:
+        actions.append(f"Answer or route Needs MT item {needs_mt[0]['id']} before spawning more work.")
+    if stuck:
+        actions.append(f"Inspect stuck/risky task {stuck[0]['id']} and either unblock, restart, or archive after review.")
+    ready_count = payload.get("summary", {}).get("counts_by_status", {}).get("ready", 0)
+    if ready_count:
+        actions.append(f"Pick the highest-leverage ready task from the {ready_count} ready backlog items.")
+    if completed:
+        actions.append(f"Review completion {completed[0]['id']} for downstream follow-up; create follow-up cards only if MT approves.")
+    actions.append("Keep recommendations read-only this morning; do not mutate Kanban automatically.")
+    actions.append("Confirm every running task still has a clear next checkpoint and owner.")
+    actions.append("If the brief feels noisy, tighten assignee/profile routing rather than dumping the task list.")
+    return actions[:5]
+
+
+def render_morning_brief(payload: dict[str, Any]) -> str:
+    """Render a compact, recommend-only weekday Kanban morning brief.
+
+    The renderer consumes the structured collector payload produced by
+    collect_kanban(). It does not read or write Kanban state itself.
+    """
+    boards = payload.get("boards", [])
+    needs_mt: list[dict[str, Any]] = []
+    stuck: list[dict[str, Any]] = []
+    completed: list[dict[str, Any]] = []
+    for board in boards:
+        needs_mt.extend(
+            task
+            for task in board.get("tasks_needing_mt", [])
+            if task.get("status") not in {"done", "archived"}
+        )
+        stuck.extend(gather_stuck_or_risky(board))
+        completed.extend(board.get("completed_since_last_run", []))
+
+    needs_mt = top_tasks(needs_mt, 5)
+    stuck = top_tasks(stuck, 5)
+    completed = sorted(completed, key=lambda task: task.get("completed_at") or "", reverse=True)[:5]
+    actions = suggested_actions(payload, needs_mt, stuck, completed)
+
+    lines = [
+        "Kanban Morning Brief",
+        f"Generated: {payload.get('generated_at') or 'unknown'} — recommend only; no Kanban mutations.",
+        "",
+        "Backlog",
+    ]
+    for board in boards:
+        lines.append(f"- {board.get('board')}: {board.get('total_tasks', 0)} total; {count_text(board.get('counts_by_status', {}))}")
+
+    lines.extend(["", "Needs MT"])
+    if needs_mt:
+        lines.extend(f"- {task_line(task, include_reason=True)}" for task in needs_mt)
+    else:
+        lines.append("- None flagged.")
+
+    lines.extend(["", "Stuck / risky"])
+    if stuck:
+        lines.extend(f"- {task_line(task, include_reason=True)}" for task in stuck)
+    else:
+        lines.append("- No blocked, stale, or risky running tasks flagged.")
+
+    lines.extend(["", "Completed since last run"])
+    if completed:
+        lines.extend(f"- {task_line(task)}" for task in completed)
+    else:
+        lines.append("- None recorded in the collector window.")
+
+    lines.extend(["", "Suggested actions"])
+    lines.extend(f"{idx}. {action}" for idx, action in enumerate(actions, start=1))
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Read-only Kanban board collector")
-    parser.add_argument("--dry-run", action="store_true", help="Print JSON without writing collector state")
+    parser = argparse.ArgumentParser(description="Read-only Kanban board collector and morning brief renderer")
+    parser.add_argument("--dry-run", action="store_true", help="Print output without writing collector state")
     parser.add_argument("--write-state", action="store_true", help="Persist since-last-run state after collecting")
+    parser.add_argument("--format", choices=("json", "text"), default="json", help="Output raw collector JSON or compact morning brief text")
     parser.add_argument("--db-path", default=str(default_db_path()), help="Path to Hermes Kanban SQLite DB")
     parser.add_argument("--state-path", default=str(default_state_path()), help="Path for collector state JSON")
     parser.add_argument("--now", type=int, help="Override current epoch seconds for deterministic tests")
@@ -411,7 +526,10 @@ def main() -> None:
     else:
         payload["state_written"] = False
 
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    if args.format == "text":
+        print(render_morning_brief(payload), end="")
+    else:
+        print(json.dumps(payload, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

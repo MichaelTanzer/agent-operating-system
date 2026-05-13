@@ -158,6 +158,94 @@ class KanbanCollectorTest(unittest.TestCase):
         self.assertIn("heartbeat_stale", stale["reasons"])
         self.assertIn("multiple_consecutive_failures", stale["reasons"])
 
+    def test_renders_compact_medium_morning_brief_from_collector_payload(self) -> None:
+        collector = load_collector_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = Path(tmpdir) / "kanban.db"
+            state = Path(tmpdir) / "state.json"
+            state.write_text(json.dumps({"last_run_at": 4000}), encoding="utf-8")
+            create_db(db)
+
+            payload = collector.collect_kanban(db, state, now=10_000, heartbeat_stale_seconds=1000)
+            brief = collector.render_morning_brief(payload)
+
+        self.assertIn("Kanban Morning Brief", brief)
+        self.assertIn("Backlog", brief)
+        self.assertIn("default:", brief)
+        self.assertIn("client-a:", brief)
+        self.assertIn("Needs MT", brief)
+        self.assertIn("t_blocked", brief)
+        self.assertIn("Stuck / risky", brief)
+        self.assertIn("t_running", brief)
+        self.assertIn("Completed since last run", brief)
+        self.assertIn("t_done", brief)
+        self.assertIn("Suggested actions", brief)
+        suggested_lines = [line for line in brief.splitlines() if line.startswith(("1. ", "2. ", "3. ", "4. ", "5. "))]
+        self.assertGreaterEqual(len(suggested_lines), 3)
+        self.assertLessEqual(len(suggested_lines), 5)
+        self.assertLess(len(brief.splitlines()), 45)
+        self.assertNotIn("Ready task", brief)
+
+    def test_stuck_risky_renderer_ignores_single_retry_running_tasks(self) -> None:
+        collector = load_collector_module()
+        board = {
+            "blocked_tasks": [],
+            "stale_heartbeats_or_claims": [],
+            "running_or_claimed_tasks": [
+                {
+                    "id": "t_once_failed",
+                    "title": "One failed attempt",
+                    "status": "running",
+                    "assignee": "coder",
+                    "consecutive_failures": 1,
+                }
+            ],
+        }
+
+        self.assertEqual([], collector.gather_stuck_or_risky(board))
+
+    def test_suggested_actions_always_returns_three_to_five_items(self) -> None:
+        collector = load_collector_module()
+
+        actions = collector.suggested_actions(
+            {"summary": {"counts_by_status": {}}},
+            needs_mt=[],
+            stuck=[],
+            completed=[],
+        )
+
+        self.assertGreaterEqual(len(actions), 3)
+        self.assertLessEqual(len(actions), 5)
+
+    def test_text_cli_is_recommend_only_and_does_not_write_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = Path(tmpdir) / "kanban.db"
+            state = Path(tmpdir) / "state.json"
+            create_db(db)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--dry-run",
+                    "--format",
+                    "text",
+                    "--db-path",
+                    str(db),
+                    "--state-path",
+                    str(state),
+                    "--now",
+                    "10000",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Kanban Morning Brief", result.stdout)
+            self.assertIn("recommend only", result.stdout.lower())
+            self.assertFalse(state.exists())
+
     def test_dry_run_cli_prints_json_and_does_not_write_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             db = Path(tmpdir) / "kanban.db"

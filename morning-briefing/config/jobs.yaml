@@ -66,15 +66,15 @@ jobs:
     script: morning-briefing/scripts/kanban_brief.py
     template: morning-briefing/templates/kanban_brief.j2
     output_contract:
-      format: structured
+      format: medium_text
       mutations_allowed: false
       sections:
-        - backlog_counts          # ready / in-progress / blocked / todo counts
-        - tasks_needing_mt        # blocked on human input
-        - stuck_or_risky          # running >2x expected, no heartbeat in 4h, retry >=2
+        - backlog_counts          # one line per board with status counts
+        - tasks_needing_mt        # open tasks flagged for MT/human input
+        - stuck_or_risky          # blocked regardless of age, running >2x expected, no heartbeat in 4h, retry >=2
         - suggested_actions       # 3–5 items, recommend-only, no mutations
         - completions_since_last_run
-    dry_run_cmd: "python3 morning-briefing/scripts/kanban_brief.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/kanban_brief.py --dry-run --format text"
 
   kanban_cleanup_proposal:
     enabled: true
