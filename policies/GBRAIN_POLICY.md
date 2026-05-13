@@ -1,10 +1,18 @@
 # Gbrain Policy
 
-Updated: 2026-05-11
+Updated: 2026-05-13
 
 Gbrain is installed as the searchable memory layer for the agent stack, but its
 scope is intentionally narrow. Phase 12 proves Gbrain on safe project artifacts
 before any wider ingestion is considered.
+
+## Current decisions
+
+- 2026-05-13: Gratitude prompt replies are not approved for Gbrain storage.
+  They are private personal reflections by default. The gratitude job may emit
+  metadata showing capture is disabled, and any future capture path must skip
+  writes unless this policy is explicitly revised, MT grants consent for the
+  specific reply, and a deletion smoke test covers the new source.
 
 ## What's allowed in the brain
 

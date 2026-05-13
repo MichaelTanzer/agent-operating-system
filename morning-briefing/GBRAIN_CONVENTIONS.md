@@ -204,8 +204,15 @@ investment_question    | watchlist/<TICKER>                     | (none)
 gbrain_recall          | all namespaces (search, read-only)     | (none — recall metadata only)
 no_do                  | guardrails/anti-patterns               | guardrails/anti-patterns (rare)
                        | guardrails/diagnostic-observations     |
-gratitude              | (none)                                 | (none)
+gratitude              | (none)                                 | (none — reply capture disabled by policy)
 ```
+
+Gratitude reply decision: as of 2026-05-13, gratitude replies are private
+personal reflections and are not approved for Gbrain storage. The reserved target
+for a future explicitly approved capture path is `personal/gratitude/replies.md`
+under the `personal/gratitude` collection, but automated writes must remain
+disabled until `policies/GBRAIN_POLICY.md` is revised, MT grants consent for the
+specific reply, and deletion/backup smoke tests cover that source.
 
 Note on `gbrain_recall`: this job searches broadly across all Gbrain content
 but never writes. It tracks which notes have been recalled recently via a

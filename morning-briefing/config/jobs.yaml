@@ -227,4 +227,15 @@ jobs:
         2.
         3.
       expects_response: true
+    response_capture:
+      enabled: false
+      consent_required: true
+      policy_decision: not_approved
+      policy_path: policies/GBRAIN_POLICY.md
+      gbrain_collection: personal/gratitude
+      gbrain_page: personal/gratitude/replies.md
+      note: >-
+        Gratitude replies are private by default. Do not write them to Gbrain
+        unless GBRAIN_POLICY.md is explicitly revised and MT gives consent on
+        the specific reply being captured.
     dry_run_cmd: "python3 morning-briefing/scripts/gratitude.py --dry-run"
