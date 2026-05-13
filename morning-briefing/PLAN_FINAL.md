@@ -254,7 +254,8 @@ gbrain_db_url: "${GBRAIN_DATABASE_URL}"   # reference env var; value not stored 
 
 - Cadence: weekday, 6:05 AM ET
 - Implementation: agent (LLM needed to filter materiality)
-- Companies (24): Aon, ArcBest, Arthur Gallagher, Brown & Brown, Bureau Veritas, CH Robinson, DSV, Eurofins, Forward Air, GXO, Intertek, Kuehne+Nagel, Mainfreight, Marsh, ODFL, RXO, Ryan Specialty, Saia, SGS, Baldwin Insurance, UL Solutions, WTW, XPO, plus cross-industry (logistics, insurance, testing/inspection/certification)
+- Companies (23): Aon, ArcBest, Arthur Gallagher, Brown & Brown, Bureau Veritas, CH Robinson, DSV, Eurofins, Forward Air, GXO, Intertek, Kuehne+Nagel, Mainfreight, Marsh, ODFL, RXO, Ryan Specialty, Saia, SGS, Baldwin Insurance, UL Solutions, WTW, XPO
+- Cross-industry coverage: logistics, insurance broking/risk, and testing/inspection/certification
 - Source tiers: Tier 1 = SEC filings / earnings; Tier 2 = Bloomberg/Reuters/WSJ; Tier 3 = company IR press releases; Tier 4 = trade press
 - Output contract: material items only, max 10 bullets, source-tier tagged, Gbrain-integrated (check prior coverage before surfacing)
 - Gbrain integration: query Gbrain for recent notes on each company before including; surface "first time in X days" context when available
@@ -365,6 +366,19 @@ gbrain_db_url: "${GBRAIN_DATABASE_URL}"   # reference env var; value not stored 
 
 ## 6. Cron Schedules (America/New_York)
 
+Hermes cron evaluates cron expressions against the Hermes configured timezone,
+resolved by `HERMES_TIMEZONE` first and then the top-level `timezone` key in
+`~/.hermes/config.yaml`. Before registering jobs, set one of:
+
+```bash
+hermes config set timezone America/New_York
+# or for the scheduler environment:
+export HERMES_TIMEZONE=America/New_York
+```
+
+The cron expressions below are therefore New York wall-clock schedules and
+automatically follow daylight saving time.
+
 ```
 6:00 AM daily         dc_weather           (all 7 days)
 6:05 AM Mon–Fri       company_watchlist
@@ -386,9 +400,14 @@ Stagger is deliberate: 5-minute gaps prevent concurrent load and keep messages s
 
 Gbrain (local PostgreSQL + pgvector, DB: gbrain) is available at the URL stored in `~/.gbrain/database_url` and `~/.gbrain/config.json`. The env var `GBRAIN_DATABASE_URL` should be set from that file in each agent job's environment.
 
+Policy gate: automated Gbrain writes are disabled until the Gbrain policy/runbook
+for the PostgreSQL + pgvector migration is merged and the specific write scopes
+in `GBRAIN_CONVENTIONS.md` are approved. Before that gate, jobs may read Gbrain
+where configured but must not write watchlist/news/idea artifacts back to it.
+
 Integration points per job:
 
-**Watchlist Digest:** Before including a company item, query Gbrain for notes tagged with that ticker. If a similar item was surfaced in the last 3 days, skip or flag as "revisit." Write a note back to Gbrain when a new material item is delivered.
+**Watchlist Digest:** Before including a company item, query Gbrain for notes tagged with that ticker. If a similar item was surfaced in the last 3 days, skip or flag as "revisit." After the policy gate is satisfied, write a note back to Gbrain when a new material item is delivered.
 
 **Overnight Ideas:** Buckets 2, 3, 4 query Gbrain for relevant project notes and memory before generating ideas. This gives ideas grounding in MT's actual history rather than generic generation.
 
@@ -510,7 +529,7 @@ This plan is complete when:
 
 - [ ] `agent-operating-system/morning-briefing/` directory exists with all subdirectories
 - [ ] `config/jobs.yaml` defines all 10 jobs with schedule, implementation type, and output contract
-- [ ] `config/watchlist.yaml` contains all 24 companies with ticker and sector
+- [ ] `config/watchlist.yaml` contains all 23 approved companies with ticker and sector
 - [ ] All Phase 1 dry-run commands execute without error
 - [ ] Phase 1 cron jobs registered and visible in `hermes cronjob list`
 - [ ] `~/.hermes/morning/` state directory exists with documented structure
