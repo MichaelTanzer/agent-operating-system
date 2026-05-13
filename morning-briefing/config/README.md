@@ -8,6 +8,7 @@ This directory contains the configuration scaffold for the morning briefing syst
 - Kanban dry-run scripts emit read-only all-board JSON for briefing and cleanup jobs.
 - The weekly cleanup proposal is recommend-only and explicitly reports that no Kanban changes were made.
 - The weekday Kanban Morning Brief text renderer is compact, recommend-only, and includes task IDs for follow-up.
+- The Watchlist Digest prototype scores material company and industry signals across all 23 approved companies.
 - `jobs.schema.json` validates job configuration shape.
 - `watchlist.yaml` stores the approved 23-company Watchlist Digest universe, including aliases, tickers, sectors, material topics, query focus, and per-company noise exclusions.
 - `source_rubric.yaml` defines source-quality tiers, source scoring, materiality signals, consulting/white-paper query patterns, and low-quality/noise exclusions for the Watchlist Digest agent.
