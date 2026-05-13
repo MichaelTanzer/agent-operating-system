@@ -11,7 +11,7 @@
       "required": ["timezone", "delivery", "state_dir", "watchlist_path"],
       "properties": {
         "timezone": {"type": "string", "description": "IANA timezone, e.g. America/New_York"},
-        "delivery": {"type": "string", "description": "Hermes platform name, e.g. telegram"},
+        "delivery": {"type": "string", "description": "Hermes platform name, e.g. discord or email"},
         "state_dir": {"type": "string", "description": "Runtime state directory, ~-expandable"},
         "watchlist_path": {"type": "string", "description": "Path to watchlist.yaml, relative to repo root"},
         "repo_root": {"type": "string", "description": "Absolute or ~-relative path to repo root"}
