@@ -3,10 +3,6 @@ name: Markdown lint
 on:
   pull_request:
     branches: [main]
-    paths:
-      - '**/*.md'
-      - '.markdownlint.json'
-      - '.markdownlint-cli2.jsonc'
   workflow_dispatch:
 
 permissions:
