@@ -196,16 +196,20 @@ jobs:
     enabled: true
     cadence: weekday
     cron: "30 6 * * 1-5"        # 6:30 AM ET, Mon–Fri
-    implementation: agent
+    implementation: script
+    script: morning-briefing/scripts/no_do.py
     output_contract:
       format: single_item
       max_sentences: 2
       label: "One Thing to Not Do Today"
+      mutations_allowed: false
+      gbrain_writes: false
     gbrain_integration:
-      enabled: true
-      read_anti_patterns: true    # notes tagged anti-pattern or scope-creep
-      read_kanban_last_days: 7
-    dry_run_cmd: "MORNING_DRY_RUN=1 hermes run 'generate one thing not to do'"
+      enabled: false              # Phase 1 is deterministic and side-effect free
+      read_anti_patterns: false
+      read_kanban_last_days: 0
+      write_on_delivery: false
+    dry_run_cmd: "python morning-briefing/scripts/no_do.py --dry-run"
 
   gratitude:
     enabled: true
