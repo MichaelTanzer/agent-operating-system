@@ -1,0 +1,220 @@
+# jobs.yaml — MT Morning Briefing System job registry
+# Source-controlled. No secrets committed here.
+# Runtime overrides live in ~/.hermes/morning/config.yaml
+
+system:
+  timezone: America/New_York
+  delivery: telegram            # platform; home channel unless overridden per-job
+  state_dir: ~/.hermes/morning
+  watchlist_path: morning-briefing/config/watchlist.yaml
+  repo_root: ~/dev/repos/agent-operating-system
+
+jobs:
+  dc_weather:
+    enabled: true
+    cadence: daily
+    cron: "0 6 * * *"           # 6:00 AM ET, all 7 days
+    implementation: script
+    script: morning-briefing/scripts/weather.py
+    template: morning-briefing/templates/weather.j2
+    output_contract:
+      max_lines: 7
+      format: plain
+      fields:
+        - high_f
+        - low_f
+        - umbrella
+        - aqi
+        - pollen
+        - stroller_ok
+        - material_alert
+    dry_run_cmd: "python morning-briefing/scripts/weather.py --dry-run"
+
+  company_watchlist:
+    enabled: true
+    cadence: weekday
+    cron: "5 6 * * 1-5"         # 6:05 AM ET, Mon–Fri
+    implementation: agent
+    script: morning-briefing/scripts/watchlist_digest.py
+    template: morning-briefing/templates/watchlist.j2
+    output_contract:
+      max_items: 10
+      format: bullet
+      fields:
+        - company
+        - ticker
+        - headline
+        - source_tier
+        - materiality_signal
+      filter: material_only
+      source_tiers:
+        tier1: "SEC filings / earnings"
+        tier2: "Bloomberg / Reuters / WSJ"
+        tier3: "Company IR press releases"
+        tier4: "Trade press"
+      gbrain_integration:
+        enabled: true
+        check_recent_days: 3
+        write_on_delivery: true
+    dry_run_cmd: "python morning-briefing/scripts/watchlist_digest.py --dry-run --company AON"
+
+  kanban_morning_brief:
+    enabled: true
+    cadence: weekday
+    cron: "10 6 * * 1-5"        # 6:10 AM ET, Mon–Fri
+    implementation: agent
+    script: morning-briefing/scripts/kanban_brief.py
+    template: morning-briefing/templates/kanban_brief.j2
+    output_contract:
+      format: structured
+      mutations_allowed: false
+      sections:
+        - backlog_counts          # ready / in-progress / blocked / todo counts
+        - tasks_needing_mt        # blocked on human input
+        - stuck_or_risky          # running >2x expected, no heartbeat in 4h, retry >=2
+        - suggested_actions       # 3–5 items, recommend-only, no mutations
+        - completions_since_last_run
+    dry_run_cmd: "python morning-briefing/scripts/kanban_brief.py --dry-run"
+
+  kanban_cleanup_proposal:
+    enabled: true
+    cadence: weekly
+    cron: "0 8 * * 1"           # 8:00 AM ET, Monday
+    implementation: agent
+    script: morning-briefing/scripts/kanban_cleanup.py
+    template: morning-briefing/templates/kanban_cleanup.j2
+    output_contract:
+      format: structured
+      mutations_allowed: false
+      sections:
+        - stale_tasks             # idle > 7 days
+        - duplicate_candidates    # title similarity > 0.85
+        - oversized_tasks         # > 3 child tasks, no clear phase structure
+        - wrong_profile_assignments
+        - orphaned_chains         # parents all done, child never moved to ready
+        - archivable_items        # done > 30 days, no downstream dependents
+    dry_run_cmd: "python morning-briefing/scripts/kanban_cleanup.py --dry-run"
+
+  overnight_ideas:
+    enabled: true
+    cadence: weekday
+    cron: "15 6 * * 1-5"        # 6:15 AM ET, Mon–Fri
+    implementation: agent
+    script: morning-briefing/scripts/overnight_ideas.py
+    template: morning-briefing/templates/overnight_ideas.j2
+    output_contract:
+      buckets: 4
+      ideas_per_bucket: 3
+      sentences_per_idea: 2
+      format: grouped_bullets
+      auto_task_creation: false
+      buckets_spec:
+        - id: kanban_good_to_great
+          label: "Kanban good → great"
+          reads_kanban: true
+          reads_gbrain: false
+        - id: extend_mt_capabilities
+          label: "Extend MT's capabilities"
+          reads_kanban: false
+          reads_gbrain: true
+        - id: coding_stack_efficacy
+          label: "Coding stack efficacy"
+          reads_kanban: false
+          reads_gbrain: true
+        - id: new_project_ideas
+          label: "New project ideas"
+          reads_kanban: false
+          reads_gbrain: true
+    gbrain_integration:
+      enabled: true
+      domains:
+        - psychoanalysis
+        - ceramics
+        - art history
+        - philosophy and economics
+        - investment research craft
+        - TanzerBot
+        - AI agent architectures
+        - fatherhood
+    dry_run_cmd: "python morning-briefing/scripts/overnight_ideas.py --dry-run"
+
+  cross_domain_analogy:
+    enabled: true
+    cadence: weekly
+    cron: "0 20 * * 0"          # 8:00 PM ET, Sunday
+    implementation: agent
+    output_contract:
+      format: essay_seed
+      max_paragraphs: 3
+      domains:
+        - investment research craft
+        - AI agent architectures
+        - psychoanalytic theory
+        - ceramics
+        - art history
+        - philosophy and economics
+        - fatherhood
+        - TanzerBot
+    dry_run_cmd: "MORNING_DRY_RUN=1 hermes run 'generate cross-domain analogy'"
+
+  investment_question:
+    enabled: true
+    cadence: weekday
+    cron: "20 6 * * 1-5"        # 6:20 AM ET, Mon–Fri
+    implementation: agent
+    script: morning-briefing/scripts/investment_question.py
+    output_contract:
+      format: single_question
+      max_sentences: 2
+      must_be_researchable: true
+      tied_to: watchlist_or_tanzerbot
+    gbrain_integration:
+      enabled: true
+      read_tanzerbot_threads: true
+      read_recent_watchlist_queries: true
+    dry_run_cmd: "python morning-briefing/scripts/investment_question.py --dry-run"
+
+  gbrain_recall:
+    enabled: true
+    cadence: weekday
+    cron: "25 6 * * 1-5"        # 6:25 AM ET, Mon–Fri
+    implementation: agent
+    script: morning-briefing/scripts/gbrain_recall.py
+    output_contract:
+      format: single_note
+      max_lines: 5
+      include_origin_date: true
+    gbrain_integration:
+      enabled: true
+      recency_exclusion_days: 14   # skip notes recalled in last 14 days
+      scoring:
+        - age_since_last_recall
+        - relevance_to_current_kanban
+    dry_run_cmd: "python morning-briefing/scripts/gbrain_recall.py --dry-run"
+
+  no_do:
+    enabled: true
+    cadence: weekday
+    cron: "30 6 * * 1-5"        # 6:30 AM ET, Mon–Fri
+    implementation: agent
+    output_contract:
+      format: single_item
+      max_sentences: 2
+      label: "One Thing to Not Do Today"
+    gbrain_integration:
+      enabled: true
+      read_anti_patterns: true    # notes tagged anti-pattern or scope-creep
+      read_kanban_last_days: 7
+    dry_run_cmd: "MORNING_DRY_RUN=1 hermes run 'generate one thing not to do'"
+
+  gratitude:
+    enabled: true
+    cadence: daily
+    cron: "35 6 * * *"          # 6:35 AM ET, all 7 days
+    implementation: script
+    script: morning-briefing/scripts/gratitude.py
+    output_contract:
+      format: prompt_message
+      text: "What are three things you're grateful for?"
+      expects_response: true
+    dry_run_cmd: "python morning-briefing/scripts/gratitude.py --dry-run"

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Morning Briefing jobs.yaml",
+  "description": "Schema for agent-operating-system/morning-briefing/config/jobs.yaml",
+  "type": "object",
+  "required": ["system", "jobs"],
+  "additionalProperties": false,
+  "properties": {
+    "system": {
+      "type": "object",
+      "required": ["timezone", "delivery", "state_dir", "watchlist_path"],
+      "properties": {
+        "timezone": {"type": "string", "description": "IANA timezone, e.g. America/New_York"},
+        "delivery": {"type": "string", "description": "Hermes platform name, e.g. telegram"},
+        "state_dir": {"type": "string", "description": "Runtime state directory, ~-expandable"},
+        "watchlist_path": {"type": "string", "description": "Path to watchlist.yaml, relative to repo root"},
+        "repo_root": {"type": "string", "description": "Absolute or ~-relative path to repo root"}
+      }
+    },
+    "jobs": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/definitions/job_spec"},
+      "minProperties": 1
+    }
+  },
+  "definitions": {
+    "job_spec": {
+      "type": "object",
+      "required": ["enabled", "cadence", "cron", "implementation", "output_contract"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "cadence": {"type": "string", "enum": ["daily", "weekday", "weekly"]},
+        "cron": {"type": "string", "description": "Cron expression (5 fields)"},
+        "implementation": {"type": "string", "enum": ["script", "agent"]},
+        "script": {"type": "string", "description": "Path to script, relative to repo root"},
+        "template": {"type": "string", "description": "Path to Jinja2 template"},
+        "dry_run_cmd": {"type": "string"},
+        "gbrain_integration": {"$ref": "#/definitions/gbrain_integration"},
+        "output_contract": {"type": "object"}
+      }
+    },
+    "gbrain_integration": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "check_recent_days": {"type": "integer"},
+        "write_on_delivery": {"type": "boolean"},
+        "recency_exclusion_days": {"type": "integer"},
+        "read_tanzerbot_threads": {"type": "boolean"},
+        "read_recent_watchlist_queries": {"type": "boolean"},
+        "read_anti_patterns": {"type": "boolean"},
+        "read_kanban_last_days": {"type": "integer"},
+        "scoring": {"type": "array", "items": {"type": "string"}},
+        "domains": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
