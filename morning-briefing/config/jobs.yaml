@@ -28,7 +28,7 @@ jobs:
         - pollen
         - stroller_ok
         - material_alert
-    dry_run_cmd: "python morning-briefing/scripts/weather.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/weather.py --dry-run"
 
   company_watchlist:
     enabled: true
@@ -56,7 +56,7 @@ jobs:
       enabled: true
       check_recent_days: 3
       write_on_delivery: true
-    dry_run_cmd: "python morning-briefing/scripts/watchlist_digest.py --dry-run --company AON"
+    dry_run_cmd: "python3 morning-briefing/scripts/watchlist_digest.py --dry-run --company AON"
 
   kanban_morning_brief:
     enabled: true
@@ -74,7 +74,7 @@ jobs:
         - stuck_or_risky          # running >2x expected, no heartbeat in 4h, retry >=2
         - suggested_actions       # 3–5 items, recommend-only, no mutations
         - completions_since_last_run
-    dry_run_cmd: "python morning-briefing/scripts/kanban_brief.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/kanban_brief.py --dry-run"
 
   kanban_cleanup_proposal:
     enabled: true
@@ -93,7 +93,7 @@ jobs:
         - wrong_profile_assignments
         - orphaned_chains         # parents all done, child never moved to ready
         - archivable_items        # done > 30 days, no downstream dependents
-    dry_run_cmd: "python morning-briefing/scripts/kanban_cleanup.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/kanban_cleanup.py --dry-run"
 
   overnight_ideas:
     enabled: true
@@ -136,7 +136,7 @@ jobs:
         - TanzerBot
         - AI agent architectures
         - fatherhood
-    dry_run_cmd: "python morning-briefing/scripts/overnight_ideas.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/overnight_ideas.py --dry-run"
 
   cross_domain_analogy:
     enabled: true
@@ -172,7 +172,7 @@ jobs:
       enabled: true
       read_tanzerbot_threads: true
       read_recent_watchlist_queries: true
-    dry_run_cmd: "python morning-briefing/scripts/investment_question.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/investment_question.py --dry-run"
 
   gbrain_recall:
     enabled: true
@@ -190,22 +190,26 @@ jobs:
       scoring:
         - age_since_last_recall
         - relevance_to_current_kanban
-    dry_run_cmd: "python morning-briefing/scripts/gbrain_recall.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/gbrain_recall.py --dry-run"
 
   no_do:
     enabled: true
     cadence: weekday
     cron: "30 6 * * 1-5"        # 6:30 AM ET, Mon–Fri
-    implementation: agent
+    implementation: script
+    script: morning-briefing/scripts/no_do.py
     output_contract:
       format: single_item
       max_sentences: 2
       label: "One Thing to Not Do Today"
+      mutations_allowed: false
+      gbrain_writes: false
     gbrain_integration:
-      enabled: true
-      read_anti_patterns: true    # notes tagged anti-pattern or scope-creep
-      read_kanban_last_days: 7
-    dry_run_cmd: "MORNING_DRY_RUN=1 hermes run 'generate one thing not to do'"
+      enabled: false              # Phase 1 is deterministic and side-effect free
+      read_anti_patterns: false
+      read_kanban_last_days: 0
+      write_on_delivery: false
+    dry_run_cmd: "python3 morning-briefing/scripts/no_do.py --dry-run"
 
   gratitude:
     enabled: true
@@ -215,6 +219,12 @@ jobs:
     script: morning-briefing/scripts/gratitude.py
     output_contract:
       format: prompt_message
-      text: "What are three things you're grateful for?"
+      text: |-
+        MT, what are three things you're grateful for today?
+
+        Please reply with three short points:
+        1.
+        2.
+        3.
       expects_response: true
-    dry_run_cmd: "python morning-briefing/scripts/gratitude.py --dry-run"
+    dry_run_cmd: "python3 morning-briefing/scripts/gratitude.py --dry-run"

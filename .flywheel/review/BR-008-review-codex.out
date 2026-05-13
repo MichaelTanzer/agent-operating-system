@@ -1,0 +1,24 @@
+Verdict: NEEDS_CHANGES
+
+Acceptance criteria:
+- Combined implementation is coherent and dry-run validation covers `dc_weather`, `gratitude`, `no_do`, and `overnight_ideas`.
+- Dry-runs avoid live network, Gbrain writes, and Kanban mutations.
+- Output contracts look suitable for separate morning delivery messages.
+- Blocker: Phase 1 job config does not consistently use `python3`: `morning-briefing/config/jobs.yaml:31`, `:139`, and `:212` still use `python` in `dry_run_cmd`.
+
+Tests:
+- `python3 morning-briefing/scripts/run_phase1_dry_runs.py --json` passed.
+- `python3 -m unittest discover -s morning-briefing/tests -v` passed, 12 tests.
+- `python3 -m unittest discover -s tests -v` passed, 4 tests.
+- `git diff --check origin/feat/morning-config-scaffold...HEAD` passed.
+
+Security/side effects:
+- No secrets found in the reviewed diff.
+- Dry-runs are side-effect free.
+- Live `overnight_ideas` writes only local runtime idea history; no Gbrain writes or Kanban mutations found.
+
+Cron readiness:
+- Not ready for paused cron creation until Phase 1 job commands in config use `python3` consistently.
+
+Required changes before paused cron creation:
+- Change Phase 1 `dry_run_cmd` entries for `dc_weather`, `overnight_ideas`, and `no_do` from `python` to `python3`.
