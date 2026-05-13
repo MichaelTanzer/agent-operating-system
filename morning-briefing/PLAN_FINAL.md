@@ -543,4 +543,4 @@ After Phase 1 cron jobs are registered:
 
 ---
 
-*End of PLAN_FINAL.md*
+End of PLAN_FINAL.md
