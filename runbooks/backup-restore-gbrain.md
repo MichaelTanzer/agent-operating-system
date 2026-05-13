@@ -4,23 +4,38 @@ Updated: 2026-05-11
 
 ## Purpose
 
-Back up and restore the Phase 12 Gbrain installation without sending brain data
-off the VPS.
+Back up and restore the Gbrain installation without sending brain data off the
+VPS by default. The current stack now uses local PostgreSQL + pgvector, with the
+original PGLite brain preserved as a fallback backup.
+
+## Current engine
+
+```text
+engine: postgres
+database: gbrain
+role: gbrain
+connection URL file: ~/.gbrain/database_url
+legacy PGLite file preserved: ~/.gbrain/brain.pglite
+```
+
+Do not print or commit the connection URL. It contains a database password.
 
 ## Locations
 
 - Gbrain tool repo: `~/gbrain`
 - Brain content repo: `~/dev/repos/brain`
-- Brain database: `~/.gbrain/brain.pglite` unless `gbrain doctor --json` reports a
-  different path
-- Repo backups: `~/dev/backups/brain-repo/YYYY-MM-DD.tar.gz`
-- DB exports: `~/dev/backups/brain-db/YYYY-MM-DD/` or `YYYY-MM-DD.tar.gz`
+- Gbrain config: `~/.gbrain/config.json`
+- Postgres connection URL: `~/.gbrain/database_url` (mode 600)
+- Repo backups: `~/dev/backups/brain-repo/*.tar.gz`
+- Markdown DB exports: `~/dev/backups/brain-db/*.tar.gz`
+- Postgres custom dumps: `~/dev/backups/brain-db/postgres-gbrain-*.dump`
 - Logs: `~/dev/logs/gbrain-backup.log`
 
 ## Backup policy
 
-- Keep backups local to the VPS.
-- Retain the last 30 daily backups.
+- Keep local backups for 30 days.
+- For long-term durability, add encrypted off-machine backup later; local VPS
+  backups do not protect against disk loss.
 - Do not push the brain repo to GitHub or another remote without explicit
   approval and a policy update.
 - Do not back up secrets. Brain content must not contain secrets by policy.
@@ -29,116 +44,94 @@ off the VPS.
 
 ```bash
 set -euo pipefail
-export PATH="$HOME/.bun/bin:$PATH"
-DATE=$(date +%F)
+export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+DATE=$(date +%F-%H%M%S)
 mkdir -p "$HOME/dev/backups/brain-repo" "$HOME/dev/backups/brain-db"
 
 # 1. Brain markdown repo snapshot
 tar -czf "$HOME/dev/backups/brain-repo/$DATE.tar.gz" \
   -C "$HOME/dev/repos" brain
 
-# 2. Gbrain DB export as markdown snapshot
-# Gbrain 0.32 exposes `gbrain export --dir`, not `gbrain export --all`.
-rm -rf "$HOME/dev/backups/brain-db/$DATE"
+# 2. Engine-agnostic markdown export snapshot
 gbrain export --dir "$HOME/dev/backups/brain-db/$DATE"
 tar -czf "$HOME/dev/backups/brain-db/$DATE.tar.gz" \
   -C "$HOME/dev/backups/brain-db" "$DATE"
 rm -rf "$HOME/dev/backups/brain-db/$DATE"
 
-# 3. Retention: keep 30 newest archives
-find "$HOME/dev/backups/brain-repo" -name '*.tar.gz' -type f -mtime +30 -delete
-find "$HOME/dev/backups/brain-db" -name '*.tar.gz' -type f -mtime +30 -delete
+# 3. Active Postgres DB custom-format dump
+pg_dump -Fc "$(cat "$HOME/.gbrain/database_url")" \
+  > "$HOME/dev/backups/brain-db/postgres-gbrain-$DATE.dump"
 ```
 
 ## Daily cron
 
-Install a daily cron after manual backup succeeds:
+Installed script:
 
-```bash
-mkdir -p "$HOME/dev/scripts" "$HOME/dev/logs"
-cat > "$HOME/dev/scripts/gbrain-backup.sh" <<'SCRIPT'
-#!/usr/bin/env bash
-set -euo pipefail
-export PATH="$HOME/.bun/bin:$PATH"
-DATE=$(date +%F)
-mkdir -p "$HOME/dev/backups/brain-repo" "$HOME/dev/backups/brain-db" "$HOME/dev/logs"
-tar -czf "$HOME/dev/backups/brain-repo/$DATE.tar.gz" -C "$HOME/dev/repos" brain
-rm -rf "$HOME/dev/backups/brain-db/$DATE"
-gbrain export --dir "$HOME/dev/backups/brain-db/$DATE"
-tar -czf "$HOME/dev/backups/brain-db/$DATE.tar.gz" -C "$HOME/dev/backups/brain-db" "$DATE"
-rm -rf "$HOME/dev/backups/brain-db/$DATE"
-find "$HOME/dev/backups/brain-repo" -name '*.tar.gz' -type f -mtime +30 -delete
-find "$HOME/dev/backups/brain-db" -name '*.tar.gz' -type f -mtime +30 -delete
-echo "$(date -Is) gbrain backup ok" >> "$HOME/dev/logs/gbrain-backup.log"
-SCRIPT
-chmod +x "$HOME/dev/scripts/gbrain-backup.sh"
-
-(crontab -l 2>/dev/null; echo '17 3 * * * $HOME/dev/scripts/gbrain-backup.sh >> $HOME/dev/logs/gbrain-backup.log 2>&1') | crontab -
+```text
+~/dev/scripts/gbrain-backup.sh
 ```
 
-## Restore smoke test
+Cron:
 
-This verifies the markdown source backup can restore into a scratch repo and that
-Gbrain can import/search it. It does not overwrite the live brain.
+```cron
+17 3 * * * $HOME/dev/scripts/gbrain-backup.sh >> $HOME/dev/logs/gbrain-backup.log 2>&1
+```
+
+The script writes:
+
+- repo tarball;
+- `gbrain export --dir` markdown export tarball;
+- `pg_dump -Fc` dump when active engine is Postgres;
+- retention cleanup for files older than 30 days.
+
+## Restore smoke test — markdown export path
+
+This verifies the source/export backup can restore into a scratch directory and
+that Gbrain can search after import. It does not overwrite the live brain.
 
 ```bash
 set -euo pipefail
-export PATH="$HOME/.bun/bin:$PATH"
-DATE=$(date +%F)
+export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+DATE=<backup-stamp>
 SCRATCH="$HOME/dev/tmp/brain-restore-$DATE"
-rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH"
 
 tar -xzf "$HOME/dev/backups/brain-repo/$DATE.tar.gz" -C "$SCRATCH"
 test -f "$SCRATCH/brain/RESOLVER.md"
-test -f "$SCRATCH/brain/retrospectives/2026-05-phase-1-thru-11.md"
 
 gbrain import "$SCRATCH/brain" --no-embed
 gbrain search "Phase 11 review gates"
 gbrain doctor --json
 ```
 
-Expected result:
+## Full restore — Postgres dump path
 
-- Import succeeds
-- Search returns the Phase 11 PR summary or retrospective
-- `gbrain doctor --json` returns usable health with no fatal errors. Warnings about
-  missing embeddings are acceptable until an embedding provider is configured.
-
-## Full restore after live corruption
-
-1. Stop any Gbrain cron jobs or daemons.
-2. Move the corrupt live content aside:
+Use this if the live Postgres `gbrain` database is corrupted. This is
+destructive to the live DB; stop Gbrain daemons first and get explicit approval.
 
 ```bash
-mv "$HOME/dev/repos/brain" "$HOME/dev/repos/brain.corrupt.$(date +%s)"
+sudo systemctl stop hermes || true
+# stop any future gbrain-ingest service here if created
+
+createdb -T template0 gbrain_restore_test
+pg_restore -d gbrain_restore_test ~/dev/backups/brain-db/postgres-gbrain-<DATE>.dump
+psql gbrain_restore_test -c 'select count(*) from pages;'
 ```
 
-3. Restore the latest repo archive:
+For actual live restore, restore into a fresh database first, verify page count
+and `gbrain doctor`, then switch `~/.gbrain/database_url` / `~/.gbrain/config.json`
+to the restored database. Do not overwrite the only live DB without a verified
+restore target.
 
-```bash
-mkdir -p "$HOME/dev/repos"
-tar -xzf "$HOME/dev/backups/brain-repo/<DATE>.tar.gz" -C "$HOME/dev/repos"
-```
+## Current verification
 
-4. Re-import into Gbrain:
-
-```bash
-export PATH="$HOME/.bun/bin:$PATH"
-gbrain import "$HOME/dev/repos/brain" --no-embed
-# If an embedding provider is configured later:
-# gbrain embed --stale
-```
-
-5. Verify:
-
-```bash
-gbrain search "Phase 11 review gates"
-gbrain doctor --json
-```
-
-## Current Phase 12 verification
-
-Manual backup and restore smoke test were run on 2026-05-11. Keyword search worked.
-Doctor reported warnings for missing embeddings/provider, which is expected in the
-keyword-only setup.
+- 2026-05-11: pre-migration PGLite export and repo tarball created.
+- 2026-05-11: migrated to local PostgreSQL 18 + pgvector 0.8.2.
+- 2026-05-11: `gbrain doctor` reported:
+  - connection OK, 10 pages;
+  - pgvector installed;
+  - RLS enabled on 36/36 public tables;
+  - auto-RLS event trigger installed;
+  - schema version 50;
+  - embeddings 100% coverage.
+- 2026-05-11: Postgres custom dump created and backup script updated.
