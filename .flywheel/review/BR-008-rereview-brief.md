@@ -1,7 +1,7 @@
 # BR-008 Re-review Brief — Phase 1 Morning Briefing Integration
 
 Task: BR-008 Phase 1 review
-PR: #11 https://github.com/MichaelTanzer/agent-operating-system/pull/11
+PR: [#11](https://github.com/MichaelTanzer/agent-operating-system/pull/11)
 Base: origin/feat/morning-config-scaffold
 
 Previous Codex review verdict was NEEDS_CHANGES because Phase 1 dry_run_cmd entries used `python` instead of `python3`.

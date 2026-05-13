@@ -2,7 +2,7 @@
 
 Task: BR-008 Phase 1 review
 Branch/worktree: /home/ubuntu/dev/worktrees/agent-operating-system-BR-007
-PR: #11 https://github.com/MichaelTanzer/agent-operating-system/pull/11
+PR: [#11](https://github.com/MichaelTanzer/agent-operating-system/pull/11)
 Base: origin/feat/morning-config-scaffold
 
 Context:
