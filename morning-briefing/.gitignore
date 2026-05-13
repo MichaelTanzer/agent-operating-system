@@ -1,0 +1,12 @@
+# morning-briefing/.gitignore
+# Runtime state and generated output — NOT tracked in git
+# These live in ~/.hermes/morning/ at runtime
+
+# Jinja2 compiled templates (if any)
+__pycache__/
+*.pyc
+*.pyo
+
+# Any accidental local output files
+*.log
+*.json.bak

@@ -1,0 +1,156 @@
+# watchlist.yaml — MT's company and industry watchlist
+# Source-controlled. Add/remove tickers here; scripts read this file.
+# Runtime path is set in jobs.yaml system.watchlist_path
+
+companies:
+  - name: Aon
+    ticker: AON
+    sector: insurance-broking
+    industries: [insurance, risk-management]
+    notes: ""
+
+  - name: ArcBest
+    ticker: ARCB
+    sector: logistics
+    industries: [trucking, LTL]
+    notes: ""
+
+  - name: Arthur J. Gallagher
+    ticker: AJG
+    sector: insurance-broking
+    industries: [insurance, risk-management]
+    notes: ""
+
+  - name: Brown & Brown
+    ticker: BRO
+    sector: insurance-broking
+    industries: [insurance, specialty-lines]
+    notes: ""
+
+  - name: Bureau Veritas
+    ticker: BV
+    sector: testing-inspection-certification
+    industries: [TIC, quality-assurance]
+    notes: ""
+
+  - name: C.H. Robinson
+    ticker: CHRW
+    sector: logistics
+    industries: [freight-brokerage, 3PL]
+    notes: ""
+
+  - name: DSV
+    ticker: DSV
+    sector: logistics
+    industries: [freight-forwarding, 3PL]
+    notes: ""
+
+  - name: Eurofins Scientific
+    ticker: ERF
+    sector: testing-inspection-certification
+    industries: [TIC, laboratory-testing]
+    notes: ""
+
+  - name: Forward Air
+    ticker: FWRD
+    sector: logistics
+    industries: [LTL, expedited-freight]
+    notes: ""
+
+  - name: GXO Logistics
+    ticker: GXO
+    sector: logistics
+    industries: [contract-logistics, 3PL]
+    notes: ""
+
+  - name: Intertek Group
+    ticker: ITRK
+    sector: testing-inspection-certification
+    industries: [TIC, product-testing]
+    notes: ""
+
+  - name: Kuehne+Nagel
+    ticker: KNIN
+    sector: logistics
+    industries: [freight-forwarding, contract-logistics]
+    notes: ""
+
+  - name: Mainfreight
+    ticker: MFT
+    sector: logistics
+    industries: [supply-chain, 3PL]
+    notes: ""
+
+  - name: Marsh & McLennan
+    ticker: MMC
+    sector: insurance-broking
+    industries: [insurance, consulting, risk-management]
+    notes: ""
+
+  - name: Old Dominion Freight Line
+    ticker: ODFL
+    sector: logistics
+    industries: [LTL]
+    notes: ""
+
+  - name: RXO
+    ticker: RXO
+    sector: logistics
+    industries: [freight-brokerage, managed-transportation]
+    notes: ""
+
+  - name: Ryan Specialty
+    ticker: RYAN
+    sector: insurance-broking
+    industries: [specialty-insurance, E&S]
+    notes: ""
+
+  - name: Saia
+    ticker: SAIA
+    sector: logistics
+    industries: [LTL]
+    notes: ""
+
+  - name: SGS
+    ticker: SGSN
+    sector: testing-inspection-certification
+    industries: [TIC, certification]
+    notes: ""
+
+  - name: Baldwin Insurance Group
+    ticker: BWIN
+    sector: insurance-broking
+    industries: [insurance, specialty-lines]
+    notes: ""
+
+  - name: UL Solutions
+    ticker: ULS
+    sector: testing-inspection-certification
+    industries: [TIC, safety-certification]
+    notes: ""
+
+  - name: WTW
+    ticker: WTW
+    sector: insurance-broking
+    industries: [insurance, human-capital, risk-management]
+    notes: ""
+
+  - name: XPO
+    ticker: XPO
+    sector: logistics
+    industries: [LTL, freight]
+    notes: ""
+
+industries:
+  # Cross-company industry themes to monitor
+  - id: logistics
+    label: Logistics & Supply Chain
+    keywords: [freight, trucking, LTL, 3PL, supply-chain, logistics, warehousing]
+
+  - id: insurance-broking
+    label: Insurance Brokerage & Risk Management
+    keywords: [insurance, brokerage, specialty-lines, risk-management, E&S, reinsurance]
+
+  - id: tic
+    label: Testing, Inspection & Certification
+    keywords: [TIC, testing, inspection, certification, quality-assurance, laboratory]
