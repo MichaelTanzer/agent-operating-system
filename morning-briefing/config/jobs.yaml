@@ -143,9 +143,14 @@ jobs:
     cadence: weekly
     cron: "0 20 * * 0"          # 8:00 PM ET, Sunday
     implementation: agent
+    script: morning-briefing/scripts/cross_domain_analogy.py
     output_contract:
       format: essay_seed
+      min_paragraphs: 2
       max_paragraphs: 3
+      quality_bar: structural_analogy_not_inspirational_riff
+      mutations_allowed: false
+      gbrain_writes: false
       domains:
         - investment research craft
         - AI agent architectures
@@ -155,7 +160,14 @@ jobs:
         - philosophy and economics
         - fatherhood
         - TanzerBot
-    dry_run_cmd: "MORNING_DRY_RUN=1 hermes run 'generate cross-domain analogy'"
+    gbrain_integration:
+      enabled: true               # read-only context export preferred when available
+      write_on_delivery: false
+      domains:
+        - ideas/analogy
+        - ideas/constraints
+        - morning-system/domain-list
+    dry_run_cmd: "python3 morning-briefing/scripts/cross_domain_analogy.py --dry-run"
 
   investment_question:
     enabled: true
