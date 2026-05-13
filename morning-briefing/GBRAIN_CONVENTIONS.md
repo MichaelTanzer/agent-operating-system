@@ -29,6 +29,12 @@ what happened today for the sake of completeness.**
 - Vector search: `gbrain search "<query>"` or Python client `.search()`
 - Page write: `gbrain write "<title>" "<body>"` or Python client `.write()`
 
+Policy dependency: these conventions assume the Phase 12 PostgreSQL + pgvector
+Gbrain policy/runbook has landed on `main`. If the repo still documents the
+legacy `~/.gbrain/brain.pglite` boundary, morning jobs must run in read-only
+mode and defer all writes until the Gbrain policy is updated and explicitly
+approved.
+
 ---
 
 ## 2. Canonical Page Namespaces
@@ -154,7 +160,7 @@ Pages:
 | Page title pattern | Written by | Purpose |
 |---|---|---|
 | `guardrails/anti-patterns` | Manual + `no_do` job (infrequent) | Named anti-patterns with description and historical signal. |
-| `guardrails/scope-creep-log` | Manual / kanban task | Documented instances of scope creep, with task IDs and resolution. |
+| `guardrails/scope-creep-log` | Manual / kanban task | Documented instances of scope creep, with stable project references and resolution. |
 | `guardrails/diagnostic-observations` | Manual + `no_do` job (infrequent) | One-liner observations about MT's work patterns, dated. |
 
 Fields in `guardrails/anti-patterns` entries:
@@ -216,7 +222,7 @@ any morning job. Violation corrupts the signal quality of MT's long-term memory.
 | Prohibited category | Why |
 |---|---|
 | Task progress or run outcome | Gbrain is not a run log. Use `~/.hermes/morning/last_run/` for session state. |
-| Kanban task IDs as content | Task IDs are ephemeral. Reference task concepts, not IDs. |
+| Kanban task IDs as durable content | Task IDs are ephemeral. Manual pages may cite task IDs as temporary references/metadata, but durable Gbrain prose should reference task concepts, PRs, branches, or stable project artifacts instead. |
 | Raw API responses or scraped HTML | Noise, not knowledge. Jobs must distill before writing. |
 | Delivery confirmation records | "Sent weather brief at 6:00 AM" — useless in 30 days. |
 | LLM chain-of-thought or reasoning traces | Intermediate reasoning is not knowledge. Final output only. |
