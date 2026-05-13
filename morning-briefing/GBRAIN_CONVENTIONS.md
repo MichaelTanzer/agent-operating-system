@@ -308,4 +308,4 @@ an automated morning cron job except as noted.
 
 ---
 
-*End of GBRAIN_CONVENTIONS.md*
+End of GBRAIN_CONVENTIONS.md
