@@ -8,8 +8,11 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
+import yaml
+
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "gratitude.py"
+JOBS_YAML_PATH = Path(__file__).resolve().parents[1] / "config" / "jobs.yaml"
 
 
 def load_gratitude_module():
@@ -67,6 +70,12 @@ class GratitudeScriptTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(stderr, "")
         self.assertEqual(stdout, self.gratitude.PROMPT_TEXT + "\n")
+
+    def test_live_prompt_matches_jobs_yaml_contract(self) -> None:
+        jobs_config = yaml.safe_load(JOBS_YAML_PATH.read_text(encoding="utf-8"))
+        contract_text = jobs_config["jobs"]["gratitude"]["output_contract"]["text"]
+
+        self.assertEqual(contract_text, self.gratitude.PROMPT_TEXT)
 
 
 if __name__ == "__main__":
