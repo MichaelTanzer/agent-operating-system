@@ -52,10 +52,10 @@ jobs:
         tier2: "Bloomberg / Reuters / WSJ"
         tier3: "Company IR press releases"
         tier4: "Trade press"
-      gbrain_integration:
-        enabled: true
-        check_recent_days: 3
-        write_on_delivery: true
+    gbrain_integration:
+      enabled: true
+      check_recent_days: 3
+      write_on_delivery: true
     dry_run_cmd: "python morning-briefing/scripts/watchlist_digest.py --dry-run --company AON"
 
   kanban_morning_brief:
