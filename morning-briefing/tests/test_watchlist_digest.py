@@ -91,6 +91,68 @@ class WatchlistDigestTest(unittest.TestCase):
             self.assertIn("http", item["url"])
             self.assertIn("Why", f"Why it matters: {item['why_it_matters']}")
 
+    def test_market_tape_uses_checked_companies_and_injected_fetcher(self):
+        def fake_fetcher(company):
+            return {
+                "ticker": company["ticker"],
+                "price": 310.9,
+                "currency": "USD",
+                "one_day_change": -2.69,
+                "one_day_change_pct": -0.86,
+                "premarket_price": 312.4,
+                "premarket_change_pct": 0.48,
+                "market_state": "PRE",
+                "as_of": "2026-05-14T10:05:00+00:00",
+                "status": "ok",
+            }
+
+        payload = self.module.build_payload(
+            dry_run=True,
+            company="AON",
+            include_market_data=True,
+            market_data_fetcher=fake_fetcher,
+        )
+
+        self.assertEqual(1, len(payload["market_tape"]))
+        self.assertEqual("AON", payload["market_tape"][0]["ticker"])
+        self.assertEqual(310.9, payload["market_tape"][0]["price"])
+        self.assertEqual(-0.86, payload["market_tape"][0]["one_day_change_pct"])
+        self.assertEqual(312.4, payload["market_tape"][0]["premarket_price"])
+
+        rendered = self.module.render_plain(payload)
+        self.assertIn("Market tape — watchlist", rendered)
+        self.assertIn("AON: $310.90, -0.86% 1D; premarket: $312.40 (+0.48%)", rendered)
+
+    def test_yahoo_chart_meta_is_normalized_to_market_tape_row(self):
+        raw = {
+            "chart": {
+                "result": [
+                    {
+                        "meta": {
+                            "symbol": "AON",
+                            "currency": "USD",
+                            "regularMarketPrice": 310.9,
+                            "chartPreviousClose": 313.59,
+                            "preMarketPrice": 312.4,
+                            "regularMarketTime": 1778753100,
+                            "exchangeName": "NYQ",
+                        }
+                    }
+                ],
+                "error": None,
+            }
+        }
+
+        row = self.module.market_data_from_yahoo_chart("AON", raw)
+
+        self.assertEqual("AON", row["ticker"])
+        self.assertEqual("USD", row["currency"])
+        self.assertEqual(310.9, row["price"])
+        self.assertAlmostEqual(-2.69, row["one_day_change"], places=2)
+        self.assertAlmostEqual(-0.86, row["one_day_change_pct"], places=2)
+        self.assertAlmostEqual(-0.38, row["premarket_change_pct"], places=2)
+        self.assertEqual("ok", row["status"])
+
     def test_external_candidate_file_can_be_scored(self):
         rows = [
             {
