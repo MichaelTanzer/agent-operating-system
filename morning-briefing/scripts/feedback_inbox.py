@@ -15,6 +15,7 @@ Example:
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 from dataclasses import dataclass
@@ -59,9 +60,22 @@ def normalize_body(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n").strip()
 
 
+def html_to_text(text: str) -> str:
+    """Convert simple Gmail HTML bodies to plain text before quote stripping."""
+    if "<" not in text or ">" not in text:
+        return text
+    text = re.sub(r"(?is)<blockquote\b.*", "", text)
+    text = re.sub(r"(?is)<(br|/p|/div|/tr|/li)\b[^>]*>", "\n", text)
+    text = re.sub(r"(?is)<[^>]+>", "", text)
+    text = html.unescape(text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
+    return text.strip()
+
+
 def strip_quoted_reply(body: str) -> str:
     """Return only MT's newly-written reply text, not the quoted briefing."""
-    text = normalize_body(body)
+    text = normalize_body(html_to_text(body))
     cut_positions = [idx for marker in QUOTE_MARKERS if (idx := text.find(marker)) != -1]
     if cut_positions:
         text = text[: min(cut_positions)]

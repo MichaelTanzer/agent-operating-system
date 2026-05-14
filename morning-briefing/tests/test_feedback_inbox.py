@@ -46,6 +46,35 @@ class FeedbackInboxTest(unittest.TestCase):
         self.assertNotIn("prior briefing text", item.comment)
         self.assertNotIn("Sent from my iPhone", item.comment)
 
+    def test_parse_reply_handles_html_email_body(self) -> None:
+        message = {
+            "id": "msg-weather",
+            "threadId": "thread-weather",
+            "from": "Michael Tanzer <michaelitanzer@gmail.com>",
+            "subject": "Re: Morning Briefing — DC Weather",
+            "date": "Thu, 14 May 2026 06:46:29 -0400",
+            "body": (
+                '<html><body dir="auto">This response is incorrect. Maybe change '
+                "the location to zip code 20010? Or maybe use a different source? "
+                "Currently the weather is 52 degrees and cloudy with a high of 62.&nbsp;"
+                '<div><br><div dir="ltr">Sent from my iPhone</div>'
+                '<blockquote type="cite">On May 14, 2026, James Lafarge wrote:'
+                "<p>prior briefing text</p></blockquote></div></body></html>"
+            ),
+        }
+
+        item = self.feedback.parse_feedback_message(message)
+
+        self.assertEqual(item.briefing_item, "DC Weather")
+        self.assertEqual(item.action_labels, ["requested_change"])
+        self.assertEqual(
+            item.comment,
+            "This response is incorrect. Maybe change the location to zip code 20010? Or maybe use a different source? Currently the weather is 52 degrees and cloudy with a high of 62.",
+        )
+        self.assertNotIn("<html", item.comment)
+        self.assertNotIn("prior briefing text", item.comment)
+        self.assertNotIn("Sent from my iPhone", item.comment)
+
     def test_write_daily_markdown_groups_by_briefing_item(self) -> None:
         messages = [
             {
