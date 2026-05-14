@@ -20,10 +20,12 @@ import argparse
 import json
 import re
 import sys
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 try:
     import yaml
@@ -35,6 +37,8 @@ except ImportError:  # pragma: no cover - exercised by operator environment
 JOB_NAME = "company_watchlist"
 MAX_DIGEST_ITEMS = 10
 WATCHLIST_RELATIVE_PATH = Path("morning-briefing/config/watchlist.yaml")
+YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+MARKET_DATA_TIMEOUT_SECONDS = 8
 
 
 @dataclass(frozen=True)
@@ -396,6 +400,88 @@ def checked_companies(watchlist: dict[str, Any], company_filter: str | None = No
     ]
 
 
+def _pct_change(current: float | int | None, previous: float | int | None) -> float | None:
+    if current is None or previous in (None, 0):
+        return None
+    return round((float(current) - float(previous)) / float(previous) * 100, 2)
+
+
+def _round_price(value: float | int | None) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), 2)
+
+
+def market_data_from_yahoo_chart(ticker: str, payload: dict[str, Any]) -> dict[str, Any]:
+    chart = payload.get("chart", {})
+    error = chart.get("error")
+    results = chart.get("result") or []
+    if error or not results:
+        return {
+            "ticker": ticker,
+            "status": "unavailable",
+            "error": str(error or "empty Yahoo chart response"),
+        }
+
+    meta = results[0].get("meta", {})
+    price = _round_price(meta.get("regularMarketPrice"))
+    previous_close = _round_price(meta.get("chartPreviousClose") or meta.get("previousClose"))
+    premarket_price = _round_price(meta.get("preMarketPrice"))
+    one_day_change = None if price is None or previous_close is None else round(price - previous_close, 2)
+    premarket_change = None if premarket_price is None or previous_close is None else round(premarket_price - previous_close, 2)
+    regular_time = meta.get("regularMarketTime")
+    as_of = None
+    if regular_time:
+        as_of = datetime.fromtimestamp(int(regular_time), tz=timezone.utc).isoformat()
+
+    return {
+        "ticker": ticker,
+        "price": price,
+        "currency": meta.get("currency"),
+        "exchange": meta.get("exchangeName") or meta.get("fullExchangeName"),
+        "previous_close": previous_close,
+        "one_day_change": one_day_change,
+        "one_day_change_pct": _pct_change(price, previous_close),
+        "premarket_price": premarket_price,
+        "premarket_change": premarket_change,
+        "premarket_change_pct": _pct_change(premarket_price, previous_close),
+        "market_state": meta.get("marketState"),
+        "as_of": as_of,
+        "status": "ok" if price is not None and previous_close is not None else "unavailable",
+    }
+
+
+def fetch_yahoo_market_data(company: dict[str, Any]) -> dict[str, Any]:
+    ticker = str(company["ticker"]).upper()
+    symbol = str(company.get("market_data_symbol") or ticker).upper()
+    encoded = urllib.parse.quote(symbol, safe="")
+    query = urllib.parse.urlencode({"interval": "1d", "range": "5d", "includePrePost": "true"})
+    url = f"{YAHOO_CHART_URL.format(symbol=encoded)}?{query}"
+    request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(request, timeout=MARKET_DATA_TIMEOUT_SECONDS) as response:
+            payload = json.load(response)
+        row = market_data_from_yahoo_chart(ticker, payload)
+        row["market_data_symbol"] = symbol
+        return row
+    except (OSError, TimeoutError, ValueError, KeyError, TypeError) as exc:
+        return {"ticker": ticker, "market_data_symbol": symbol, "status": "unavailable", "error": str(exc)}
+
+
+def build_market_tape(
+    companies: list[dict[str, Any]],
+    fetcher: Callable[[dict[str, Any]], dict[str, Any]] = fetch_yahoo_market_data,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for company in companies:
+        row = fetcher(company)
+        row.setdefault("ticker", company["ticker"])
+        row.setdefault("company", company["name"])
+        row.setdefault("exchange", company.get("exchange"))
+        rows.append(row)
+    return rows
+
+
 def candidate_to_payload(scored: ScoredCandidate) -> dict[str, Any]:
     candidate = scored.candidate
     companies = [
@@ -443,6 +529,8 @@ def build_payload(
     input_candidates: Path | None = None,
     generated_at: datetime | None = None,
     watchlist_path: Path | None = None,
+    include_market_data: bool | None = None,
+    market_data_fetcher: Callable[[dict[str, Any]], dict[str, Any]] = fetch_yahoo_market_data,
 ) -> dict[str, Any]:
     resolved_watchlist_path = resolve_watchlist_path(watchlist_path)
     watchlist, rubric = load_taxonomy(resolved_watchlist_path)
@@ -464,6 +552,8 @@ def build_payload(
     digest_items = [candidate_to_payload(item) for item in material[:MAX_DIGEST_ITEMS]]
     context_items = [candidate_to_payload(item) for item in scored if item.status == "context"]
     excluded_count = sum(1 for item in scored if item.status == "excluded")
+    should_include_market_data = (not dry_run) if include_market_data is None else include_market_data
+    market_tape = build_market_tape(checked, market_data_fetcher) if should_include_market_data else []
 
     coverage_note = (
         f"Checked {len(checked)}/{approved_count} approved companies"
@@ -486,6 +576,7 @@ def build_payload(
         "candidate_count": len(candidates),
         "deduped_candidate_count": len(candidates),
         "material_item_count": len(digest_items),
+        "market_tape": market_tape,
         "items": digest_items,
         "context_items": context_items,
         "coverage_note": coverage_note,
@@ -518,12 +609,50 @@ def validate_payload(payload: dict[str, Any]) -> list[str]:
     return errors
 
 
+def currency_symbol(currency: str | None) -> str:
+    return {"USD": "$", "EUR": "€", "GBP": "£", "CHF": "CHF ", "DKK": "DKK "}.get(currency or "", "")
+
+
+def format_price(value: float | int | None, currency: str | None) -> str:
+    if value is None:
+        return "n/a"
+    return f"{currency_symbol(currency)}{float(value):.2f}"
+
+
+def format_pct(value: float | int | None, signed: bool = True) -> str:
+    if value is None:
+        return "n/a"
+    sign = "+" if signed and float(value) > 0 else ""
+    return f"{sign}{float(value):.2f}%"
+
+
+def format_market_tape_row(row: dict[str, Any]) -> str:
+    ticker = row.get("ticker", "UNKNOWN")
+    if row.get("status") != "ok":
+        return f"- {ticker}: market data unavailable"
+    currency = row.get("currency")
+    price = format_price(row.get("price"), currency)
+    one_day = format_pct(row.get("one_day_change_pct"))
+    premarket_price = row.get("premarket_price")
+    if premarket_price is None:
+        premarket = "n/a"
+    else:
+        premarket = f"{format_price(premarket_price, currency)} ({format_pct(row.get('premarket_change_pct'))})"
+    return f"- {ticker}: {price}, {one_day} 1D; premarket: {premarket}"
+
+
 def render_plain(payload: dict[str, Any]) -> str:
     lines: list[str] = []
     if payload["dry_run"]:
         lines.append("[DRY RUN] watchlist_digest.py")
     lines.append("Company + Industry Watchlist Digest")
     lines.append(payload["coverage_note"])
+
+    market_tape = payload.get("market_tape", [])
+    if market_tape:
+        lines.append("")
+        lines.append("Market tape — watchlist")
+        lines.extend(format_market_tape_row(row) for row in market_tape)
 
     if not payload["items"]:
         lines.append("")
@@ -554,6 +683,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--company", help="Limit manual run to a single ticker or company name")
     parser.add_argument("--watchlist-path", type=Path, help="Override watchlist.yaml path")
     parser.add_argument(
+        "--market-data",
+        action="store_true",
+        help="Include live market tape during dry-runs; production runs include it by default",
+    )
+    parser.add_argument(
+        "--no-market-data",
+        action="store_true",
+        help="Suppress live market tape even in production runs",
+    )
+    parser.add_argument(
         "--input-candidates",
         type=Path,
         help="Optional JSON list of externally collected candidates for scoring",
@@ -563,12 +702,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    include_market_data = None
+    if args.market_data:
+        include_market_data = True
+    if args.no_market_data:
+        include_market_data = False
     try:
         payload = build_payload(
             dry_run=args.dry_run,
             company=args.company,
             input_candidates=args.input_candidates,
             watchlist_path=args.watchlist_path,
+            include_market_data=include_market_data,
         )
     except (OSError, KeyError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

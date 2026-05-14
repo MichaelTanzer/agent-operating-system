@@ -357,6 +357,7 @@ companies:
 
   - name: Marsh McLennan
     ticker: MMC
+    market_data_symbol: MRSH
     exchange: NYSE
     sector: insurance_broking
     sector_label: Insurance Brokerage & Risk Advisory
