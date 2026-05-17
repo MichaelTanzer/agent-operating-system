@@ -1449,4 +1449,3 @@ If the external repository contains a transferable idea that maps strongly to on
 If the repository is interesting but does not currently map well to Michael’s work, Hermes should send an honest no-fit analysis.
 
 If the repository is inaccessible, too broad without a focal point, or blocked by missing portfolio context, Hermes should escalate narrowly and avoid pretending to have completed the analysis.
-
